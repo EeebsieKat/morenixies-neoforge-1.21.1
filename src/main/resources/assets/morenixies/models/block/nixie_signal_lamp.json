@@ -1,0 +1,57 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"texture_size": [8, 8],
+	"loader": "neoforge:composite",
+	"children": {
+		"tubes": {
+			"render_type": "minecraft:translucent",
+			"textures": {
+				"1": "create:block/nixie_tube"
+			},
+			"elements": [
+				{
+					"from": [5, 0, 5],
+					"to": [11, 12, 11],
+					"rotation": {"angle": 0, "axis": "y", "origin": [8, 6, 8]},
+					"faces": {
+						"north": {"uv": [0, 1, 6, 13], "texture": "#1"},
+						"east": {"uv": [0, 1, 6, 13], "texture": "#1"},
+						"south": {"uv": [0, 1, 6, 13], "texture": "#1"},
+						"west": {"uv": [0, 1, 6, 13], "texture": "#1"},
+						"up": {"uv": [6, 0, 12, 6], "texture": "#1"},
+						"down": {"uv": [6, 6, 12, 12], "texture": "#1"}
+					}
+				}
+			]
+		},
+		"indicator": {
+			"render_type": "minecraft:cutout",
+			"textures": {
+				"2": "morenixies:block/nixie_indicator"
+			},
+			"elements": [
+				{
+					"from": [6, 2, 8],
+					"to": [10, 10, 8],
+					"rotation": {"angle": 0, "axis": "y", "origin": [8, 6, 8]},
+					"faces": {
+						"north": {"uv": [0, 0, 8, 16], "texture": "#2", "neoforge:emissive": true},
+						"east": {"uv": [0, 0, 0, 16], "texture": "#2", "neoforge:emissive": true},
+						"south": {"uv": [0, 0, 8, 16], "texture": "#2", "neoforge:emissive": true},
+						"west": {"uv": [0, 0, 0, 16], "texture": "#2", "neoforge:emissive": true},
+						"up": {"uv": [8, 0, 0, 0], "texture": "#2", "neoforge:emissive": true},
+						"down": {"uv": [8, 0, 0, 0], "texture": "#2", "neoforge:emissive": true}
+					}
+				}
+			]
+		}
+	},
+	"display": {
+		"fixed": {
+			"rotation": [0, 90, 0],
+			"scale": [0.5, 0.5, 0.5]
+		}
+	}
+}

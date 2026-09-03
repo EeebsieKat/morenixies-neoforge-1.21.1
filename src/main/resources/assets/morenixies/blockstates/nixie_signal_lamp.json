@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=down,lit=false": { "model": "morenixies:block/nixie_signal_lamp_off", "x": 180 },
+    "facing=down,lit=true":  { "model": "morenixies:block/nixie_signal_lamp",     "x": 180 },
+    "facing=up,lit=false":   { "model": "morenixies:block/nixie_signal_lamp_off" },
+    "facing=up,lit=true":    { "model": "morenixies:block/nixie_signal_lamp" },
+    "facing=north,lit=false":{ "model": "morenixies:block/nixie_signal_lamp_off", "x": 90 },
+    "facing=north,lit=true": { "model": "morenixies:block/nixie_signal_lamp",     "x": 90 },
+    "facing=south,lit=false":{ "model": "morenixies:block/nixie_signal_lamp_off", "x": 90, "y": 180 },
+    "facing=south,lit=true": { "model": "morenixies:block/nixie_signal_lamp",     "x": 90, "y": 180 },
+    "facing=west,lit=false": { "model": "morenixies:block/nixie_signal_lamp_off", "x": 90, "y": 270 },
+    "facing=west,lit=true":  { "model": "morenixies:block/nixie_signal_lamp",     "x": 90, "y": 270 },
+    "facing=east,lit=false": { "model": "morenixies:block/nixie_signal_lamp_off", "x": 90, "y": 90 },
+    "facing=east,lit=true":  { "model": "morenixies:block/nixie_signal_lamp",     "x": 90, "y": 90 }
+  }
+}
