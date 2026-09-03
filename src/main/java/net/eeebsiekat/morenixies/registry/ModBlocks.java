@@ -15,6 +15,6 @@ public class ModBlocks {
                     .noOcclusion()
                     .isRedstoneConductor((state, level, pos) -> false)
                     .strength(1.5f)
-                    .lightLevel(state -> state.getValue(NixieSignalLampBlock.LIT) ? 15 : 0)
+                    .lightLevel(state -> state.getValue(NixieSignalLampBlock.LIT) ? 15 : 10)
             ));
 }

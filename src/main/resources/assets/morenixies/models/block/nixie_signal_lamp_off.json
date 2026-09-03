@@ -2,9 +2,29 @@
 	"format_version": "1.9.0",
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
-	"texture_size": [8, 8],
+	"texture_size": [16, 16],
 	"loader": "neoforge:composite",
 	"children": {
+		"casing": {
+			"render_type": "minecraft:solid",
+			"textures": {
+				"1": "create:block/nixie_tube"
+			},
+			"elements": [
+				{
+					"from": [5, 0, 5],
+					"to": [11, 3, 11],
+					"faces": {
+						"north": {"uv": [0, 10, 6, 13], "texture": "#1"},
+						"east":  {"uv": [0, 10, 6, 13], "texture": "#1"},
+						"south": {"uv": [0, 10, 6, 13], "texture": "#1"},
+						"west":  {"uv": [0, 10, 6, 13], "texture": "#1"},
+						"up":    {"uv": [6, 6, 12, 12], "texture": "#1"},
+						"down":  {"uv": [6, 6, 12, 12], "texture": "#1", "cullface": "down"}
+					}
+				}
+			]
+		},
 		"tubes": {
 			"render_type": "minecraft:translucent",
 			"textures": {
@@ -12,25 +32,17 @@
 			},
 			"elements": [
 				{
-					"from": [5, 0, 5],
+					"from": [5, 3, 5],
 					"to": [11, 12, 11],
-					"rotation": {"angle": 0, "axis": "y", "origin": [8, 6, 8]},
 					"faces": {
-						"north": {"uv": [0, 1, 6, 13], "texture": "#1"},
-						"east": {"uv": [0, 1, 6, 13], "texture": "#1"},
-						"south": {"uv": [0, 1, 6, 13], "texture": "#1"},
-						"west": {"uv": [0, 1, 6, 13], "texture": "#1"},
-						"up": {"uv": [6, 0, 12, 6], "texture": "#1"},
-						"down": {"uv": [6, 6, 12, 12], "texture": "#1"}
+						"north": {"uv": [0, 1, 6, 10], "texture": "#1"},
+						"east":  {"uv": [0, 1, 6, 10], "texture": "#1"},
+						"south": {"uv": [0, 1, 6, 10], "texture": "#1"},
+						"west":  {"uv": [0, 1, 6, 10], "texture": "#1"},
+						"up":    {"uv": [6, 0, 12, 6], "texture": "#1"}
 					}
 				}
 			]
-		}
-	},
-	"display": {
-		"fixed": {
-			"rotation": [0, 90, 0],
-			"scale": [0.5, 0.5, 0.5]
 		}
 	}
 }
