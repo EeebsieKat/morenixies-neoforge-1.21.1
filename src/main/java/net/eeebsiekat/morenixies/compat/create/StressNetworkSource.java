@@ -5,6 +5,8 @@ import com.simibubi.create.content.redstone.displayLink.DisplayLinkContext;
 import com.simibubi.create.content.redstone.displayLink.source.SingleLineDisplaySource;
 import com.simibubi.create.content.redstone.displayLink.target.DisplayTargetStats;
 import com.simibubi.create.foundation.gui.ModularGuiLineBuilder;
+import net.eeebsiekat.morenixies.content.NixieBargraphEntity;
+import net.eeebsiekat.morenixies.content.NixieSignalLampEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.api.distmarker.Dist;
@@ -17,40 +19,34 @@ public class StressNetworkSource extends SingleLineDisplaySource {
 
     @Override
     protected MutableComponent provideLine(DisplayLinkContext context, DisplayTargetStats stats) {
-        if (context.getSourceBlockEntity() instanceof KineticBlockEntity kineticBE) {
-            if (kineticBE.hasNetwork()) {
-                var network = kineticBE.getOrCreateNetwork();
+        if (context.getSourceBlockEntity() instanceof KineticBlockEntity kineticBE && kineticBE.hasNetwork()) {
+            var network = kineticBE.getOrCreateNetwork();
+            float capacity = network.calculateCapacity();
+            float stress = network.calculateStress();
 
-                float capacity = network.calculateCapacity();
-                float stress = network.calculateStress();
+            if (capacity > 0) {
+                float stressUsageRatio = (stress / capacity) * 100.0f;
 
-                if (capacity > 0) {
+                // If targeting a Bargraph, output continuous percentage
+                if (context.getTargetBlockEntity() instanceof NixieBargraphEntity) {
+                    return Component.literal((int) stressUsageRatio + "%");
+                }
+
+                // If targeting a Signal Lamp, output threshold check result
+                if (context.getTargetBlockEntity() instanceof NixieSignalLampEntity) {
                     int modeIndex = context.sourceConfig().getInt("Mode");
-
-                    // Read threshold safely with fallback
-                    int thresholdStep = context.sourceConfig().contains("Threshold")
-                            ? context.sourceConfig().getInt("Threshold")
-                            : 0;
-
+                    int thresholdStep = context.sourceConfig().contains("Threshold") ? context.sourceConfig().getInt("Threshold") : 0;
                     float thresholdPercent = thresholdStep * 10.0f;
 
-                    // Calculate actual percentage (0.0% to 100.0%+)
-                    float stressUsageRatio = (stress / capacity) * 100.0f;
-
-                    boolean active;
-                    if (modeIndex == 0) {
-                        // Mode 0: Stress Used -> ON if current usage % >= target threshold %
-                        active = stressUsageRatio >= thresholdPercent;
-                    } else {
-                        // Mode 1: Stress Available -> ON if current usage % <= target threshold %
-                        active = stressUsageRatio <= thresholdPercent;
-                    }
-
+                    boolean active = (modeIndex == 0) ? (stressUsageRatio >= thresholdPercent) : (stressUsageRatio <= thresholdPercent);
                     return Component.literal(active ? "!" : "0");
                 }
+
+                // Default continuous fallback
+                return Component.literal((int) stressUsageRatio + "%");
             }
         }
-        return Component.literal("0");
+        return Component.literal("0%");
     }
 
     @Override
@@ -62,7 +58,6 @@ public class StressNetworkSource extends SingleLineDisplaySource {
     @OnlyIn(Dist.CLIENT)
     public void initConfigurationWidgets(DisplayLinkContext context, ModularGuiLineBuilder builder, boolean isFirstLine) {
         if (isFirstLine) {
-            // Line 1 Widget: Mode selection
             builder.addSelectionScrollInput(0, 120,
                     (si, l) -> si.forOptions(List.of(
                             Component.literal("Stress Used"),
@@ -71,7 +66,6 @@ public class StressNetworkSource extends SingleLineDisplaySource {
                     "Mode"
             );
         } else {
-            // Line 2 Widget: Percentage threshold selector
             List<Component> percentOptions = new ArrayList<>();
             for (int i = 0; i <= 100; i += 10) {
                 percentOptions.add(Component.literal(i + "%"));

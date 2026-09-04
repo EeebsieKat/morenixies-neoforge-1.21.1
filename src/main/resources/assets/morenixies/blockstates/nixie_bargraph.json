@@ -1,0 +1,31 @@
+{
+  "variants": {
+    "facing=down,part=single": { "model": "morenixies:block/nixie_bargraph_single" },
+    "facing=up,part=single": { "model": "morenixies:block/nixie_bargraph_single", "x": 180 },
+    "facing=north,part=single": { "model": "morenixies:block/nixie_bargraph_single", "x": 270 },
+    "facing=south,part=single": { "model": "morenixies:block/nixie_bargraph_single", "x": 90, "y": 180, "z": 180 },
+    "facing=west,part=single": { "model": "morenixies:block/nixie_bargraph_single", "x": 90, "y": 270, "z": 180 },
+    "facing=east,part=single": { "model": "morenixies:block/nixie_bargraph_single", "x": 90, "y": 90, "z": 180 },
+
+    "facing=down,part=start": { "model": "morenixies:block/nixie_bargraph_end" },
+    "facing=up,part=start": { "model": "morenixies:block/nixie_bargraph_end", "x": 180 },
+    "facing=north,part=start": { "model": "morenixies:block/nixie_bargraph_end", "x": 270 },
+    "facing=south,part=start": { "model": "morenixies:block/nixie_bargraph_end", "x": 90, "y": 180, "z": 180 },
+    "facing=west,part=start": { "model": "morenixies:block/nixie_bargraph_end", "x": 90, "y": 270, "z": 180 },
+    "facing=east,part=start": { "model": "morenixies:block/nixie_bargraph_end", "x": 90, "y": 90, "z": 180 },
+
+    "facing=down,part=middle": { "model": "morenixies:block/nixie_bargraph_middle", "x": 180 },
+    "facing=up,part=middle": { "model": "morenixies:block/nixie_bargraph_middle" },
+    "facing=north,part=middle": { "model": "morenixies:block/nixie_bargraph_middle", "x": 90 },
+    "facing=south,part=middle": { "model": "morenixies:block/nixie_bargraph_middle", "x": 90, "y": 180 },
+    "facing=west,part=middle": { "model": "morenixies:block/nixie_bargraph_middle", "x": 90, "y": 270 },
+    "facing=east,part=middle": { "model": "morenixies:block/nixie_bargraph_middle", "x": 90, "y": 90 },
+
+    "facing=down,part=end": { "model": "morenixies:block/nixie_bargraph_end", "x": 180 },
+    "facing=up,part=end": { "model": "morenixies:block/nixie_bargraph_end" },
+    "facing=north,part=end": { "model": "morenixies:block/nixie_bargraph_end", "x": 90 },
+    "facing=south,part=end": { "model": "morenixies:block/nixie_bargraph_end", "x": 90, "y": 180 },
+    "facing=west,part=end": { "model": "morenixies:block/nixie_bargraph_end", "x": 90, "y": 270 },
+    "facing=east,part=end": { "model": "morenixies:block/nixie_bargraph_end", "x": 90, "y": 90 }
+  }
+}

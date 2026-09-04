@@ -11,4 +11,7 @@ public class ModItems {
 
     public static final DeferredItem<Item> NIXIE_SIGNAL_LAMP = ITEMS.register("nixie_signal_lamp",
             () -> new BlockItem(ModBlocks.NIXIE_SIGNAL_LAMP.get(), new Item.Properties()));
+
+    public static final DeferredItem<Item> NIXIE_BARGRAPH = ITEMS.register("nixie_bargraph",
+            () -> new BlockItem(ModBlocks.NIXIE_BARGRAPH.get(), new Item.Properties()));
 }

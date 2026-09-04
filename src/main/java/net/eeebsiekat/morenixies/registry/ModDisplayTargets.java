@@ -3,6 +3,7 @@ package net.eeebsiekat.morenixies.registry;
 import com.simibubi.create.api.behaviour.display.DisplayTarget;
 import com.simibubi.create.api.registry.CreateRegistries;
 import net.eeebsiekat.morenixies.MoreNixies;
+import net.eeebsiekat.morenixies.compat.create.NixieBargraphDisplayTarget;
 import net.eeebsiekat.morenixies.compat.create.NixieSignalLampDisplayTarget;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -13,4 +14,7 @@ public class ModDisplayTargets {
 
     public static final DeferredHolder<DisplayTarget, NixieSignalLampDisplayTarget> NIXIE_SIGNAL_LAMP =
             DISPLAY_TARGETS.register("nixie_signal_lamp", NixieSignalLampDisplayTarget::new);
+
+    public static final DeferredHolder<DisplayTarget, NixieBargraphDisplayTarget> NIXIE_BARGRAPH =
+            DISPLAY_TARGETS.register("nixie_bargraph", NixieBargraphDisplayTarget::new);
 }

@@ -32,6 +32,7 @@ public class MoreNixies {
                     .title(Component.translatable("creativetab.morenixies_tab"))
                     .displayItems((params, output) -> {
                         output.accept(ModItems.NIXIE_SIGNAL_LAMP.get());
+                        output.accept(ModItems.NIXIE_BARGRAPH.get());
                     })
                     .build()
     );
@@ -73,6 +74,11 @@ public class MoreNixies {
             DisplayTarget.BY_BLOCK_ENTITY.register(
                     ModBlockEntities.NIXIE_SIGNAL_LAMP.get(),
                     ModDisplayTargets.NIXIE_SIGNAL_LAMP.get()
+            );
+
+            DisplayTarget.BY_BLOCK_ENTITY.register(
+                    ModBlockEntities.NIXIE_BARGRAPH.get(),
+                    ModDisplayTargets.NIXIE_BARGRAPH.get()
             );
 
             ItemBlockRenderTypes.setRenderLayer(
