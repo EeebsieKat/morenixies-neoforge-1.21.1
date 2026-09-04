@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "create:electron_tube"
+    }
+  ],
+  "result": {
+    "count": 4,
+    "id": "morenixies:nixie_signal_lamp"
+  }
+}

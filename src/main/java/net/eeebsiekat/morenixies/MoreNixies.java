@@ -60,6 +60,15 @@ public class MoreNixies {
                 );
             }
 
+            BuiltInRegistries.BLOCK_ENTITY_TYPE.keySet().stream()
+                    .filter(key -> key.getNamespace().equals("create"))
+                    .map(BuiltInRegistries.BLOCK_ENTITY_TYPE::get)
+                    .filter(java.util.Objects::nonNull)
+                    .forEach(type ->
+                            DisplaySource.BY_BLOCK_ENTITY.add(type, ModDisplaySources.STRESS_NETWORK.get())
+                    );
+
+
             // Target binding - Uses .register() for SimpleRegistry
             DisplayTarget.BY_BLOCK_ENTITY.register(
                     ModBlockEntities.NIXIE_SIGNAL_LAMP.get(),
