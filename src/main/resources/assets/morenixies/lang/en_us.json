@@ -1,5 +1,6 @@
 {
   "block.morenixies.nixie_signal_lamp": "Nixie Signal Lamp",
   "morenixies.display_source.fluid_tank_fullness": "Fluid Tank Fullness",
-  "morenixies.display_target.nixie_signal_lamp": "Nixie Signal Lamp"
+  "morenixies.display_target.nixie_signal_lamp": "Nixie Signal Lamp",
+  "creativetab.morenixies_tab": "Create: More Nixies"
 }

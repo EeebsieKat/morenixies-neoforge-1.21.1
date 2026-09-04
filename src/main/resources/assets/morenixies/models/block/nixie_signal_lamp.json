@@ -43,22 +43,6 @@
 					}
 				}
 			]
-		},
-		"indicator": {
-			"render_type": "minecraft:cutout",
-			"textures": {
-				"2": "morenixies:block/nixie_indicator"
-			},
-			"elements": [
-				{
-					"from": [6, 3, 8],
-					"to": [10, 11, 8],
-					"faces": {
-						"north": {"uv": [0, 0, 8, 16], "texture": "#2", "neoforge:emissive": true},
-						"south": {"uv": [0, 0, 8, 16], "texture": "#2", "neoforge:emissive": true}
-					}
-				}
-			]
 		}
 	}
 }
