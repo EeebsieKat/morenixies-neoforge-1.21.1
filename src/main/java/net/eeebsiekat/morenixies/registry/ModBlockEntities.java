@@ -3,8 +3,10 @@ package net.eeebsiekat.morenixies.registry;
 import net.eeebsiekat.morenixies.MoreNixies;
 import net.eeebsiekat.morenixies.content.NixieBargraphEntity;
 import net.eeebsiekat.morenixies.content.NixieFlightHudEntity;
+import net.eeebsiekat.morenixies.content.NixieOscilloscopeEntity;
 import net.eeebsiekat.morenixies.content.NixieSignalLampEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -24,4 +26,8 @@ public class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<NixieFlightHudEntity>> NIXIE_FLIGHT_HUD =
             BLOCK_ENTITIES.register("nixie_flight_hud",
                     () -> BlockEntityType.Builder.of((pos, state) -> new NixieFlightHudEntity(ModBlockEntities.NIXIE_FLIGHT_HUD.get(), pos, state), ModBlocks.NIXIE_FLIGHT_HUD.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<NixieOscilloscopeEntity>> NIXIE_OSCILLOSCOPE =
+            BLOCK_ENTITIES.register("nixie_oscilloscope",
+                    () -> BlockEntityType.Builder.of(NixieOscilloscopeEntity::new, ModBlocks.NIXIE_OSCILLOSCOPE.get()).build(null));
 }

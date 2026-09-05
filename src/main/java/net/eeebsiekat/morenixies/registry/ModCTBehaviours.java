@@ -17,4 +17,14 @@ public class ModCTBehaviours {
     public static ConnectedTextureBehaviour nixieCasing() {
         return new SimpleCTBehaviour(NIXIE_CASING_CT);
     }
+
+    public static final CTSpriteShiftEntry NIXIE_OSCILLOSCOPE_CT = CTSpriteShifter.getCT(
+            AllCTTypes.OMNIDIRECTIONAL,
+            ResourceLocation.fromNamespaceAndPath("morenixies", "block/nixie_oscilloscope"),
+            ResourceLocation.fromNamespaceAndPath("morenixies", "block/nixie_oscilloscope_connected")
+    );
+
+    public static ConnectedTextureBehaviour nixieOscilloscope() {
+        return new SimpleCTBehaviour(NIXIE_OSCILLOSCOPE_CT);
+    }
 }

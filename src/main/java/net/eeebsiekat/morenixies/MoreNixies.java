@@ -31,6 +31,8 @@ public class MoreNixies {
                     .icon(() -> new ItemStack(ModItems.NIXIE_BARGRAPH.get()))
                     .title(Component.translatable("creativetab.morenixies_tab"))
                     .displayItems((params, output) -> {
+                        output.accept(ModBlocks.NIXIE_CASING.get());
+                        output.accept(ModBlocks.NIXIE_OSCILLOSCOPE.get());
                         output.accept(ModItems.NIXIE_SIGNAL_LAMP.get());
                         output.accept(ModItems.NIXIE_BARGRAPH.get());
                         output.accept(ModItems.NIXIE_FLIGHT_HUD.get());

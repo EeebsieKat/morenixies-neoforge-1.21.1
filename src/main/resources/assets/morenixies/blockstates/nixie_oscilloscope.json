@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "morenixies:block/nixie_oscilloscope" }
+  }
+}
