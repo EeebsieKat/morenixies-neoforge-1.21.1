@@ -3,6 +3,7 @@ package net.eeebsiekat.morenixies.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import net.eeebsiekat.morenixies.content.HudPart;
 import net.eeebsiekat.morenixies.content.NixieFlightHudBlock;
 import net.eeebsiekat.morenixies.content.NixieFlightHudEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -23,14 +24,19 @@ public class NixieFlightHudRenderer implements BlockEntityRenderer<NixieFlightHu
     @Override
     public void render(NixieFlightHudEntity entity, float partialTick, PoseStack poseStack,
                        MultiBufferSource buffer, int packedLight, int packedOverlay) {
+
+        NixieFlightHudEntity.DisplayMode mode = entity.getMode();
+        if (mode == NixieFlightHudEntity.DisplayMode.OFF) return;
+
         Direction facing = entity.getBlockState().getValue(NixieFlightHudBlock.FACING);
+        HudPart part = entity.getBlockState().getValue(NixieFlightHudBlock.HUD_PART);
 
         poseStack.pushPose();
 
-        // 1. Align matrix to block center
+        // 1. Center of block
         poseStack.translate(0.5F, 0.5F, 0.5F);
 
-        // 2. Orient matrix to face inward toward the pilot
+        // 2. Base Direction Orientation
         float yRot = switch (facing) {
             case SOUTH -> 0f;
             case WEST -> 90f;
@@ -39,46 +45,60 @@ public class NixieFlightHudRenderer implements BlockEntityRenderer<NixieFlightHu
         };
         poseStack.mulPose(Axis.YP.rotationDegrees(yRot));
 
-        // 3. Offsets: Centered on X (0.0F), lowered Y (0.15F), front concave surface (-0.05F Z)
-        poseStack.translate(0.0F, 0.15F, -0.05F);
-        poseStack.scale(1.8f, 1.8f, 1.8f);
+        // 3. Multiblock Angle Offset
+        poseStack.mulPose(Axis.YP.rotationDegrees(part.getYAngleOffset()));
+
+        // 4. Panel Position Tuning (Corrected Z-directions & new END parts handling)
+        float zOffset = switch (part) {
+            case LARGE_SIDE_LEFT, LARGE_SIDE_RIGHT -> 0.22F;
+            case SMALL_SIDE_LEFT, SMALL_SIDE_RIGHT, SMALL_SIDE_LEFT_END, SMALL_SIDE_RIGHT_END -> -0.28F;
+            default -> -0.28F;
+        };
+        poseStack.translate(0.0F, 0.08F, zOffset);
+
+        // 5. Global Scale
+        poseStack.scale(2.4F, 2.4F, 2.4F);
 
         VertexConsumer builder = buffer.getBuffer(RenderType.entityTranslucentCull(WHITE_TEX));
         Matrix4f staticMatrix = poseStack.last().pose();
 
-        // --- STATIC HUD ELEMENTS (Screen Fixed) ---
-        renderBoresightReticle(builder, staticMatrix, packedOverlay);
-
-        if (entity.isShowTapes()) {
-            float speed = entity.getInterpolatedSpeed(partialTick);
-            float alt = entity.getInterpolatedAltitude(partialTick);
-            float yaw = entity.getInterpolatedYaw(partialTick);
-
-            renderSpeedTape(builder, staticMatrix, speed, packedOverlay);
-            renderAltitudeTape(builder, staticMatrix, alt, packedOverlay);
-            renderHeadingRibbon(builder, staticMatrix, yaw, packedOverlay);
+        // --- RENDER BASED ON INDIVIDUAL BLOCK DISPLAY MODE ---
+        switch (mode) {
+            case PITCH_ROLL -> {
+                renderBoresightReticle(builder, staticMatrix, packedOverlay);
+                renderPitchLadderDynamic(entity, partialTick, poseStack, builder, packedOverlay);
+            }
+            case SPEED_ALTITUDE -> {
+                float speed = entity.getInterpolatedSpeed(partialTick);
+                float alt = entity.getInterpolatedAltitude(partialTick);
+                renderSpeedTape(builder, staticMatrix, speed, packedOverlay);
+                renderAltitudeTape(builder, staticMatrix, alt, packedOverlay);
+            }
+            case HEADING -> {
+                float yaw = entity.getInterpolatedYaw(partialTick);
+                renderHeadingRibbon(builder, staticMatrix, yaw, packedOverlay);
+            }
+            case TANK_FULLNESS -> {
+                renderTankGauge(builder, staticMatrix, packedOverlay);
+            }
+            default -> {}
         }
 
-        // --- DYNAMIC HUD ELEMENTS ---
-        if (entity.isShowPitchLadder()) {
-            float pitch = entity.getInterpolatedPitch(partialTick);
-            float roll = entity.getInterpolatedRoll(partialTick);
+        poseStack.popPose();
+    }
 
-            poseStack.pushPose();
+    private void renderPitchLadderDynamic(NixieFlightHudEntity entity, float partialTick, PoseStack poseStack, VertexConsumer builder, int overlay) {
+        float pitch = entity.getInterpolatedPitch(partialTick);
+        float roll = entity.getInterpolatedRoll(partialTick);
 
-            // Inverted roll angle sign to compensate for flipped Y-axis facing orientation
-            poseStack.mulPose(Axis.ZP.rotationDegrees(-roll));
+        poseStack.pushPose();
+        poseStack.mulPose(Axis.ZP.rotationDegrees(-roll));
+        float pitchOffsetY = (pitch / 90.0f) * 0.35f;
+        poseStack.translate(0.0F, -pitchOffsetY, 0.0F);
 
-            // Pitch offset along vertical axis
-            float pitchOffsetY = (pitch / 90.0f) * 0.35f;
-            poseStack.translate(0.0F, -pitchOffsetY, 0.0F);
-
-            Matrix4f dynamicMatrix = poseStack.last().pose();
-            renderPitchLadder(builder, dynamicMatrix, packedOverlay);
-
-            poseStack.popPose();
-        }
-
+        // Grab current dynamic matrix stack state after applying pitch & roll transforms
+        Matrix4f dynamicMatrix = poseStack.last().pose();
+        renderPitchLadder(builder, dynamicMatrix, overlay);
         poseStack.popPose();
     }
 
@@ -101,11 +121,9 @@ public class NixieFlightHudRenderer implements BlockEntityRenderer<NixieFlightHu
             float hw = 0.06f;
             float drop = step > 0 ? -0.015f : 0.015f;
 
-            // Left Ladder Rung
             drawQuad(builder, matrix, -hw - 0.05f, y - LINE_THICKNESS, -hw, y + LINE_THICKNESS, overlay);
             drawQuad(builder, matrix, -hw - 0.05f, y, -hw - 0.05f + (LINE_THICKNESS * 2), y + drop, overlay);
 
-            // Right Ladder Rung
             drawQuad(builder, matrix, hw, y - LINE_THICKNESS, hw + 0.05f, y + LINE_THICKNESS, overlay);
             drawQuad(builder, matrix, hw + 0.05f - (LINE_THICKNESS * 2), y, hw + 0.05f, y + drop, overlay);
         }
@@ -120,7 +138,11 @@ public class NixieFlightHudRenderer implements BlockEntityRenderer<NixieFlightHu
     }
 
     private void renderHeadingRibbon(VertexConsumer builder, Matrix4f matrix, float yaw, int overlay) {
-        drawQuad(builder, matrix, -0.15f, 0.22f, 0.15f, 0.23f, overlay);
+        drawQuad(builder, matrix, -0.15f, 0.15f, 0.15f, 0.16f, overlay);
+    }
+
+    private void renderTankGauge(VertexConsumer builder, Matrix4f matrix, int overlay) {
+        drawQuad(builder, matrix, -0.05f, -0.25f, 0.05f, 0.25f, overlay);
     }
 
     private void drawQuad(VertexConsumer builder, Matrix4f matrix, float minX, float minY, float maxX, float maxY, int overlay) {

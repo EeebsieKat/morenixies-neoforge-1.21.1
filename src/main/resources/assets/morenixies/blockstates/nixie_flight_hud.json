@@ -1,19 +1,43 @@
 {
   "variants": {
-    "facing=north": {
-      "model": "morenixies:block/nixie_flight_hud"
-    },
-    "facing=south": {
-      "model": "morenixies:block/nixie_flight_hud",
-      "y": 180
-    },
-    "facing=west": {
-      "model": "morenixies:block/nixie_flight_hud",
-      "y": 270
-    },
-    "facing=east": {
-      "model": "morenixies:block/nixie_flight_hud",
-      "y": 90
-    }
+    "facing=north,part=single": { "model": "morenixies:block/nixie_flight_hud_single", "y": 180 },
+    "facing=east,part=single":  { "model": "morenixies:block/nixie_flight_hud_single", "y": 270 },
+    "facing=south,part=single": { "model": "morenixies:block/nixie_flight_hud_single" },
+    "facing=west,part=single":  { "model": "morenixies:block/nixie_flight_hud_single", "y": 90 },
+
+    "facing=north,part=middle": { "model": "morenixies:block/nixie_flight_hud_middle", "y": 180 },
+    "facing=east,part=middle":  { "model": "morenixies:block/nixie_flight_hud_middle", "y": 270 },
+    "facing=south,part=middle": { "model": "morenixies:block/nixie_flight_hud_middle" },
+    "facing=west,part=middle":  { "model": "morenixies:block/nixie_flight_hud_middle", "y": 90 },
+
+    "facing=north,part=small_side_left": { "model": "morenixies:block/nixie_flight_hud_small_side_left", "y": 180 },
+    "facing=east,part=small_side_left":  { "model": "morenixies:block/nixie_flight_hud_small_side_left", "y": 270 },
+    "facing=south,part=small_side_left": { "model": "morenixies:block/nixie_flight_hud_small_side_left" },
+    "facing=west,part=small_side_left":  { "model": "morenixies:block/nixie_flight_hud_small_side_left", "y": 90 },
+
+    "facing=north,part=small_side_right": { "model": "morenixies:block/nixie_flight_hud_small_side_right", "y": 180 },
+    "facing=east,part=small_side_right":  { "model": "morenixies:block/nixie_flight_hud_small_side_right", "y": 270 },
+    "facing=south,part=small_side_right": { "model": "morenixies:block/nixie_flight_hud_small_side_right" },
+    "facing=west,part=small_side_right":  { "model": "morenixies:block/nixie_flight_hud_small_side_right", "y": 90 },
+
+    "facing=north,part=large_side_left": { "model": "morenixies:block/nixie_flight_hud_large_side_left", "y": 180 },
+    "facing=east,part=large_side_left":  { "model": "morenixies:block/nixie_flight_hud_large_side_left", "y": 270 },
+    "facing=south,part=large_side_left": { "model": "morenixies:block/nixie_flight_hud_large_side_left" },
+    "facing=west,part=large_side_left":  { "model": "morenixies:block/nixie_flight_hud_large_side_left", "y": 90 },
+
+    "facing=north,part=large_side_right": { "model": "morenixies:block/nixie_flight_hud_large_side_right", "y": 180 },
+    "facing=east,part=large_side_right":  { "model": "morenixies:block/nixie_flight_hud_large_side_right", "y": 270 },
+    "facing=south,part=large_side_right": { "model": "morenixies:block/nixie_flight_hud_large_side_right" },
+    "facing=west,part=large_side_right":  { "model": "morenixies:block/nixie_flight_hud_large_side_right", "y": 90 },
+
+    "facing=north,part=small_side_left_end": { "model": "morenixies:block/nixie_flight_hud_small_side_left_end", "y": 180 },
+    "facing=east,part=small_side_left_end":  { "model": "morenixies:block/nixie_flight_hud_small_side_left_end", "y": 270 },
+    "facing=south,part=small_side_left_end": { "model": "morenixies:block/nixie_flight_hud_small_side_left_end" },
+    "facing=west,part=small_side_left_end":  { "model": "morenixies:block/nixie_flight_hud_small_side_left_end", "y": 90 },
+
+    "facing=north,part=small_side_right_end": { "model": "morenixies:block/nixie_flight_hud_small_side_right_end", "y": 180 },
+    "facing=east,part=small_side_right_end":  { "model": "morenixies:block/nixie_flight_hud_small_side_right_end", "y": 270 },
+    "facing=south,part=small_side_right_end": { "model": "morenixies:block/nixie_flight_hud_small_side_right_end" },
+    "facing=west,part=small_side_right_end":  { "model": "morenixies:block/nixie_flight_hud_small_side_right_end", "y": 90 }
   }
 }
