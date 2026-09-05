@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -63,7 +64,7 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state, NixieFlightHudEntity be) {
-        // 1. Store previous values for interpolation
+        // 1. Store previous values for renderer interpolation
         be.prevPitch = be.pitch;
         be.prevRoll = be.roll;
         be.prevYaw = be.yaw;
@@ -85,12 +86,19 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
 
         if (be.telemetry != null && be.telemetry.isMounted(level, pos)) {
             Vector3d vel = be.telemetry.getVelocity(level, pos);
-            be.speed = (float) vel.length();
-            be.verticalVelocity = (float) vel.y;
+
+            // Guard against NaN/Infinity vectors breaking renderers
+            if (vel != null && !Double.isNaN(vel.length()) && !Double.isInfinite(vel.length())) {
+                be.speed = (float) vel.length();
+                be.verticalVelocity = (float) vel.y;
+            } else {
+                be.speed = 0.0f;
+                be.verticalVelocity = 0.0f;
+            }
+
             be.altitude = (float) be.telemetry.getAltitude(level, pos);
 
             Quaterniond rot = be.telemetry.getRotation(level, pos);
-
             Vector3d forward = new Vector3d(0, 0, 1).rotate(rot);
             Vector3d up = new Vector3d(0, 1, 0).rotate(rot);
 
@@ -99,6 +107,10 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
 
             Vector3d right = new Vector3d(1, 0, 0).rotate(rot);
             be.roll = (float) Math.toDegrees(Math.atan2(right.y, up.y));
+        } else if (be.telemetry != null && !be.telemetry.isMounted(level, pos)) {
+            // Decay speed back to zero if unmounted
+            be.speed = 0.0f;
+            be.verticalVelocity = 0.0f;
         }
     }
 
@@ -124,27 +136,29 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
 
     // Interpolation getters used by NixieFlightHudRenderer
     public float getInterpolatedPitch(float pt) {
-        return prevPitch + (pitch - prevPitch) * pt;
+        return Mth.lerp(pt, prevPitch, pitch);
     }
 
     public float getInterpolatedRoll(float pt) {
-        return prevRoll + (roll - prevRoll) * pt;
+        return Mth.lerp(pt, prevRoll, roll);
     }
 
     public float getInterpolatedYaw(float pt) {
-        return prevYaw + (yaw - prevYaw) * pt;
+        // Wrap yaw differences across -180/180 degree boundary smoothly
+        float diff = Mth.wrapDegrees(yaw - prevYaw);
+        return prevYaw + diff * pt;
     }
 
     public float getInterpolatedSpeed(float pt) {
-        return prevSpeed + (speed - prevSpeed) * pt;
+        return Mth.lerp(pt, prevSpeed, speed);
     }
 
     public float getInterpolatedAltitude(float pt) {
-        return prevAltitude + (altitude - prevAltitude) * pt;
+        return Mth.lerp(pt, prevAltitude, altitude);
     }
 
     public float getInterpolatedVerticalSpeed(float pt) {
-        return prevVerticalVelocity + (verticalVelocity - prevVerticalVelocity) * pt;
+        return Mth.lerp(pt, prevVerticalVelocity, verticalVelocity);
     }
 
     public void updateFromAeronautics(float p, float r, float y, float alt, float spd, float vSpd) {
@@ -160,6 +174,11 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
     protected void write(CompoundTag tag, HolderLookup.Provider registries, boolean clientPacket) {
         super.write(tag, registries, clientPacket);
         tag.putInt("DisplayMode", mode.ordinal());
+        tag.putFloat("Speed", speed);
+        tag.putFloat("Pitch", pitch);
+        tag.putFloat("Roll", roll);
+        tag.putFloat("Yaw", yaw);
+        tag.putFloat("Altitude", altitude);
     }
 
     @Override
@@ -172,6 +191,11 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
                 this.mode = modes[modeOrdinal];
             }
         }
+        if (tag.contains("Speed")) this.speed = tag.getFloat("Speed");
+        if (tag.contains("Pitch")) this.pitch = tag.getFloat("Pitch");
+        if (tag.contains("Roll")) this.roll = tag.getFloat("Roll");
+        if (tag.contains("Yaw")) this.yaw = tag.getFloat("Yaw");
+        if (tag.contains("Altitude")) this.altitude = tag.getFloat("Altitude");
     }
 
     @Override
