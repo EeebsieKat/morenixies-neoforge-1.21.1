@@ -4,7 +4,8 @@
 	"ambientocclusion": false,
 	"textures": {
 		"1": "morenixies:block/nixie_bargraph_tube",
-		"3": "morenixies:block/nixie_bargraph"
+		"3": "morenixies:block/nixie_bargraph",
+		"particle": "morenixies:block/nixie_graph"
 	},
 	"elements": [
 		{

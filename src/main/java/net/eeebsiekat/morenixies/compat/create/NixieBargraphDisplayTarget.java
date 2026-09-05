@@ -23,7 +23,7 @@ public class NixieBargraphDisplayTarget extends DisplayTarget {
 
             // Parse progress or raw percentages from source text
             float fillRatio = parseFillRatio(fullText);
-            bargraph.setCurrentLevel(fillRatio);
+            bargraph.setTargetLevel(fillRatio);
         }
     }
 

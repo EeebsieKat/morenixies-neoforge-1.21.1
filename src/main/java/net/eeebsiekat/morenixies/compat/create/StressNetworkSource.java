@@ -27,12 +27,21 @@ public class StressNetworkSource extends SingleLineDisplaySource {
             if (capacity > 0) {
                 float stressUsageRatio = (stress / capacity) * 100.0f;
 
-                // If targeting a Bargraph, output continuous percentage
+                // BARGRAPH TARGET LOGIC
                 if (context.getTargetBlockEntity() instanceof NixieBargraphEntity) {
+                    int bargraphMode = context.sourceConfig().getInt("BargraphMode");
+
+                    if (bargraphMode == 1) {
+                        // Stress Remaining Mode
+                        float remainingPercent = Math.max(0.0f, 100.0f - stressUsageRatio);
+                        return Component.literal((int) remainingPercent + "%");
+                    }
+
+                    // Default: Stress Used Mode
                     return Component.literal((int) stressUsageRatio + "%");
                 }
 
-                // If targeting a Signal Lamp, output threshold check result
+                // SIGNAL LAMP TARGET LOGIC
                 if (context.getTargetBlockEntity() instanceof NixieSignalLampEntity) {
                     int modeIndex = context.sourceConfig().getInt("Mode");
                     int thresholdStep = context.sourceConfig().contains("Threshold") ? context.sourceConfig().getInt("Threshold") : 0;
@@ -42,7 +51,7 @@ public class StressNetworkSource extends SingleLineDisplaySource {
                     return Component.literal(active ? "!" : "0");
                 }
 
-                // Default continuous fallback
+                // Fallback for other displays
                 return Component.literal((int) stressUsageRatio + "%");
             }
         }
@@ -57,25 +66,39 @@ public class StressNetworkSource extends SingleLineDisplaySource {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void initConfigurationWidgets(DisplayLinkContext context, ModularGuiLineBuilder builder, boolean isFirstLine) {
-        if (isFirstLine) {
-            builder.addSelectionScrollInput(0, 120,
-                    (si, l) -> si.forOptions(List.of(
-                            Component.literal("Stress Used"),
-                            Component.literal("Stress Available")
-                    )).titled(Component.literal("Check Type")),
-                    "Mode"
-            );
-        } else {
-            List<Component> percentOptions = new ArrayList<>();
-            for (int i = 0; i <= 100; i += 10) {
-                percentOptions.add(Component.literal(i + "%"));
+        if (context.getTargetBlockEntity() instanceof NixieBargraphEntity) {
+            // UI OPTIONS FOR BARGRAPH
+            if (isFirstLine) {
+                builder.addSelectionScrollInput(0, 120,
+                        (si, l) -> si.forOptions(List.of(
+                                Component.literal("Stress Used"),
+                                Component.literal("Stress Remaining")
+                        )).titled(Component.literal("Display Mode")),
+                        "BargraphMode"
+                );
             }
+        } else if (context.getTargetBlockEntity() instanceof NixieSignalLampEntity) {
+            // UI OPTIONS FOR SIGNAL LAMP
+            if (isFirstLine) {
+                builder.addSelectionScrollInput(0, 120,
+                        (si, l) -> si.forOptions(List.of(
+                                Component.literal("Stress Used"),
+                                Component.literal("Stress Available")
+                        )).titled(Component.literal("Check Type")),
+                        "Mode"
+                );
+            } else {
+                List<Component> percentOptions = new ArrayList<>();
+                for (int i = 0; i <= 100; i += 10) {
+                    percentOptions.add(Component.literal(i + "%"));
+                }
 
-            builder.addSelectionScrollInput(0, 120,
-                    (si, l) -> si.forOptions(percentOptions)
-                            .titled(Component.literal("Threshold %")),
-                    "Threshold"
-            );
+                builder.addSelectionScrollInput(0, 120,
+                        (si, l) -> si.forOptions(percentOptions)
+                                .titled(Component.literal("Threshold %")),
+                        "Threshold"
+                );
+            }
         }
     }
 

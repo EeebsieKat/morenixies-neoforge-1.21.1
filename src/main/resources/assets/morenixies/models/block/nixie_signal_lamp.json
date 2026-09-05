@@ -2,6 +2,9 @@
 	"format_version": "1.9.0",
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
+	"textures": {
+		"particle": "morenixies:block/nixie_graph"
+	},
 	"texture_size": [16, 16],
 	"loader": "neoforge:composite",
 	"children": {

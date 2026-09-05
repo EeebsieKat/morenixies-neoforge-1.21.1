@@ -3,7 +3,7 @@
 	"credit": "Made with Blockbench",
 	"textures": {
 		"0": "morenixies:block/nixie_bargraph_tube",
-		"particle": "morenixies:block/nixie_bargraph_tube"
+		"particle": "morenixies:block/nixie_graph"
 	},
 	"elements": [
 		{

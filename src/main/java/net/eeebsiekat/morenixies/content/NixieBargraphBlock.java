@@ -13,11 +13,14 @@ import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import javax.annotation.Nullable;
 
 public class NixieBargraphBlock extends DirectionalBlock implements EntityBlock, SimpleWaterloggedBlock, IWrenchable {
     public static final EnumProperty<BargraphPart> PART = EnumProperty.create("part", BargraphPart.class);
@@ -38,6 +41,16 @@ public class NixieBargraphBlock extends DirectionalBlock implements EntityBlock,
         return CODEC;
     }
 
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
+        if (!level.isClientSide) return null;
+
+        return blockEntityType == ModBlockEntities.NIXIE_BARGRAPH.get()
+                ? (lvl, pos, st, be) -> NixieBargraphEntity.tick(lvl, pos, st, (NixieBargraphEntity) be)
+                : null;
+    }
+
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING, PART, WATERLOGGED);
@@ -53,17 +66,26 @@ public class NixieBargraphBlock extends DirectionalBlock implements EntityBlock,
     }
 
     @Override
-    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos currentPos, BlockPos neighborPos) {
-        if (state.getValue(WATERLOGGED)) {
-            level.scheduleTick(currentPos, net.minecraft.world.level.material.Fluids.WATER, net.minecraft.world.level.material.Fluids.WATER.getTickDelay(level));
+    public BlockState updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos) {
+        if (facing.getAxis() != Direction.Axis.Y) {
+            return state;
         }
 
-        Direction facing = state.getValue(FACING);
-        if (direction.getAxis() == facing.getAxis()) {
-            return updatePartState(level, currentPos, facing, state.getValue(WATERLOGGED));
+        boolean hasAbove = level.getBlockState(currentPos.above()).getBlock() instanceof NixieBargraphBlock;
+        boolean hasBelow = level.getBlockState(currentPos.below()).getBlock() instanceof NixieBargraphBlock;
+
+        BargraphPart part;
+        if (hasAbove && hasBelow) {
+            part = BargraphPart.MIDDLE;
+        } else if (hasAbove) {
+            part = BargraphPart.START; // Bottom controller block
+        } else if (hasBelow) {
+            part = BargraphPart.END;   // Top cap block
+        } else {
+            part = BargraphPart.SINGLE;
         }
 
-        return super.updateShape(state, direction, neighborState, level, currentPos, neighborPos);
+        return state.setValue(NixieBargraphBlock.PART, part);
     }
 
     private BlockState updatePartState(LevelAccessor level, BlockPos pos, Direction facing, boolean waterlogged) {

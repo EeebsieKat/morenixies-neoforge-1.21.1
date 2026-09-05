@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "morenixies:nixie_signal_lamp"
+    "morenixies:nixie_signal_lamp",
+    "morenixies:nixie_bargraph"
   ]
 }

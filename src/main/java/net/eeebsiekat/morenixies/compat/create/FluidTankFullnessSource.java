@@ -28,12 +28,21 @@ public class FluidTankFullnessSource extends SingleLineDisplaySource {
                 float currentAmount = tank.getFluidAmount();
                 float totalCapacity = tank.getCapacity();
 
-                // If targeting a Bargraph, always return continuous fraction data
+                // BARGRAPH TARGET LOGIC
                 if (context.getTargetBlockEntity() instanceof NixieBargraphEntity) {
+                    int bargraphMode = context.sourceConfig().getInt("BargraphMode");
+
+                    if (bargraphMode == 1) {
+                        // Inverted mode: calculate remaining empty space ratio
+                        float remaining = totalCapacity - currentAmount;
+                        return Component.literal((int) remaining + "/" + (int) totalCapacity);
+                    }
+
+                    // Default fill ratio
                     return Component.literal((int) currentAmount + "/" + (int) totalCapacity);
                 }
 
-                // If targeting a Signal Lamp, perform threshold calculation
+                // SIGNAL LAMP TARGET LOGIC
                 if (context.getTargetBlockEntity() instanceof NixieSignalLampEntity) {
                     int modeIndex = context.sourceConfig().getInt("Mode");
                     int thresholdStep = context.sourceConfig().getInt("Threshold");
@@ -43,9 +52,6 @@ public class FluidTankFullnessSource extends SingleLineDisplaySource {
                     boolean active = (modeIndex == 1) ? (fillRatio >= thresholdPercent) : (fillRatio <= thresholdPercent);
                     return Component.literal(active ? "!" : "0");
                 }
-
-                // Default fallback to fraction format for other targets
-                return Component.literal((int) currentAmount + "/" + (int) totalCapacity);
             }
         }
         return Component.literal("0/100");
@@ -59,25 +65,40 @@ public class FluidTankFullnessSource extends SingleLineDisplaySource {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void initConfigurationWidgets(DisplayLinkContext context, ModularGuiLineBuilder builder, boolean isFirstLine) {
-        if (isFirstLine) {
-            builder.addSelectionScrollInput(0, 120,
-                    (si, l) -> si.forOptions(List.of(
-                            Component.literal("From Empty"),
-                            Component.literal("From Full")
-                    )).titled(Component.literal("Signal Condition")),
-                    "Mode"
-            );
-        } else {
-            List<Component> percentOptions = new ArrayList<>();
-            for (int i = 0; i <= 100; i += 10) {
-                percentOptions.add(Component.literal(i + "%"));
+        // Check what block the Display Link is pointing to
+        if (context.getTargetBlockEntity() instanceof NixieBargraphEntity) {
+            // UI OPTIONS SPECIFIC TO BARGRAPH
+            if (isFirstLine) {
+                builder.addSelectionScrollInput(0, 120,
+                        (si, l) -> si.forOptions(List.of(
+                                Component.literal("Standard Fill"),
+                                Component.literal("Inverted Fill")
+                        )).titled(Component.literal("Display Mode")),
+                        "BargraphMode"
+                );
             }
+        } else if (context.getTargetBlockEntity() instanceof NixieSignalLampEntity) {
+            // UI OPTIONS SPECIFIC TO SIGNAL LAMP
+            if (isFirstLine) {
+                builder.addSelectionScrollInput(0, 120,
+                        (si, l) -> si.forOptions(List.of(
+                                Component.literal("From Empty"),
+                                Component.literal("From Full")
+                        )).titled(Component.literal("Signal Condition")),
+                        "Mode"
+                );
+            } else {
+                List<Component> percentOptions = new ArrayList<>();
+                for (int i = 0; i <= 100; i += 10) {
+                    percentOptions.add(Component.literal(i + "%"));
+                }
 
-            builder.addSelectionScrollInput(0, 120,
-                    (si, l) -> si.forOptions(percentOptions)
-                            .titled(Component.literal("Threshold %")),
-                    "Threshold"
-            );
+                builder.addSelectionScrollInput(0, 120,
+                        (si, l) -> si.forOptions(percentOptions)
+                                .titled(Component.literal("Threshold %")),
+                        "Threshold"
+                );
+            }
         }
     }
 
