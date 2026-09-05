@@ -28,7 +28,7 @@ public class MoreNixies {
 
     public static final Supplier<CreativeModeTab> TAB = CREATIVE_MODE_TABS.register("morenixies_tab", () ->
             CreativeModeTab.builder()
-                    .icon(() -> new ItemStack(ModItems.NIXIE_SIGNAL_LAMP.get()))
+                    .icon(() -> new ItemStack(ModItems.NIXIE_BARGRAPH.get()))
                     .title(Component.translatable("creativetab.morenixies_tab"))
                     .displayItems((params, output) -> {
                         output.accept(ModItems.NIXIE_SIGNAL_LAMP.get());

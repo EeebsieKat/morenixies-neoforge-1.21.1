@@ -14,7 +14,6 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -42,7 +41,7 @@ public class NixieBargraphRenderer implements BlockEntityRenderer<NixieBargraphE
 
         BargraphPart part = state.getValue(NixieBargraphBlock.PART);
 
-        // Only render from the master base block (START or SINGLE)
+        // Only render from master base block
         if (part != BargraphPart.START && part != BargraphPart.SINGLE) {
             return;
         }
@@ -52,12 +51,11 @@ public class NixieBargraphRenderer implements BlockEntityRenderer<NixieBargraphE
         float velocity = blockEntity.getVelocity();
         float interpolatedLevel = rawLevel + (velocity * partialTick);
 
-        // Clamp render bounds so the bounce doesn't clip past the glass ends
         float renderFill = Mth.clamp(interpolatedLevel, 0.0f, 1.0f);
         if (renderFill <= 0.0f) return;
 
         int chainLength = calculateVerticalChainLength(level, blockEntity.getBlockPos());
-        float renderHeight = (chainLength * 1.0f - 0.25f) * renderFill;
+        float fullHeight = (chainLength * 1.0f - 0.25f) * renderFill;
 
         TextureAtlasSprite sprite = Minecraft.getInstance()
                 .getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
@@ -67,10 +65,8 @@ public class NixieBargraphRenderer implements BlockEntityRenderer<NixieBargraphE
         float alpha;
 
         if (blockEntity.isRedlined()) {
-            // Fast strobe warning pulse for redline
             alpha = (Math.sin(time * 24.0f) > 0) ? 1.0f : 0.15f;
         } else {
-            // Authentic CRT / Nixie Tube Micro-Flicker
             float baseHum = (float) Math.sin(time * 45.0f) * 0.05f;
             float harmonic = (float) Math.cos(time * 110.0f) * 0.03f;
 
@@ -81,17 +77,16 @@ public class NixieBargraphRenderer implements BlockEntityRenderer<NixieBargraphE
             alpha = Mth.clamp(0.90f + baseHum + harmonic + microDrop, 0.40f, 1.0f);
         }
 
-        poseStack.pushPose();
+        int activeColor = blockEntity.getColor();
 
-        // Center in block space and offset slightly above bottom rim
+        poseStack.pushPose();
         poseStack.translate(0.5D, 0.125D, 0.5D);
 
-        // Rotate around vertical Y axis to face camera
         float cameraYRot = this.context.getBlockEntityRenderDispatcher().camera.getYRot();
         poseStack.mulPose(Axis.YP.rotationDegrees(-cameraYRot));
 
         Matrix4f matrix = poseStack.last().pose();
-        int light = 15728880; // Full bright glow
+        int light = 15728880;
         VertexConsumer builder = buffer.getBuffer(RenderType.translucent());
 
         float minU = sprite.getU0();
@@ -102,24 +97,26 @@ public class NixieBargraphRenderer implements BlockEntityRenderer<NixieBargraphE
         float minX = -0.125f;
         float maxX = 0.125f;
 
-        float minY = 0.0f;
-        float maxY = renderHeight;
+        // Display Mode Handling: Solid Fill vs Dot Indicator
+        float minY = (blockEntity.getMode() == NixieBargraphEntity.DisplayMode.DOT)
+                ? Math.max(0.0f, fullHeight - 0.25f)
+                : 0.0f;
+        float maxY = fullHeight;
 
-        // Tile texture vertically along total height
-        float vSpan = (maxV - minV) * (renderHeight * 4.0f);
+        float vSpan = (maxV - minV) * ((maxY - minY) * 4.0f);
         float currentMaxV = minV + (vSpan % (maxV - minV));
 
         // Front Quad
-        addVertex(builder, matrix, minX, minY, 0.0f, minU, maxV, light, alpha);
-        addVertex(builder, matrix, maxX, minY, 0.0f, maxU, maxV, light, alpha);
-        addVertex(builder, matrix, maxX, maxY, 0.0f, maxU, currentMaxV, light, alpha);
-        addVertex(builder, matrix, minX, maxY, 0.0f, minU, currentMaxV, light, alpha);
+        addVertex(builder, matrix, minX, minY, 0.0f, minU, maxV, light, alpha, activeColor);
+        addVertex(builder, matrix, maxX, minY, 0.0f, maxU, maxV, light, alpha, activeColor);
+        addVertex(builder, matrix, maxX, maxY, 0.0f, maxU, currentMaxV, light, alpha, activeColor);
+        addVertex(builder, matrix, minX, maxY, 0.0f, minU, currentMaxV, light, alpha, activeColor);
 
         // Back Quad
-        addVertex(builder, matrix, maxX, minY, 0.0f, maxU, maxV, light, alpha);
-        addVertex(builder, matrix, minX, minY, 0.0f, minU, maxV, light, alpha);
-        addVertex(builder, matrix, minX, maxY, 0.0f, minU, currentMaxV, light, alpha);
-        addVertex(builder, matrix, maxX, maxY, 0.0f, maxU, currentMaxV, light, alpha);
+        addVertex(builder, matrix, maxX, minY, 0.0f, maxU, maxV, light, alpha, activeColor);
+        addVertex(builder, matrix, minX, minY, 0.0f, minU, maxV, light, alpha, activeColor);
+        addVertex(builder, matrix, minX, maxY, 0.0f, minU, currentMaxV, light, alpha, activeColor);
+        addVertex(builder, matrix, maxX, maxY, 0.0f, maxU, currentMaxV, light, alpha, activeColor);
 
         poseStack.popPose();
     }
@@ -143,9 +140,13 @@ public class NixieBargraphRenderer implements BlockEntityRenderer<NixieBargraphE
         return length;
     }
 
-    private void addVertex(VertexConsumer builder, Matrix4f matrix, float x, float y, float z, float u, float v, int light, float alpha) {
+    private void addVertex(VertexConsumer builder, Matrix4f matrix, float x, float y, float z, float u, float v, int light, float alpha, int color) {
+        float r = ((color >> 16) & 0xFF) / 255.0f;
+        float g = ((color >> 8) & 0xFF) / 255.0f;
+        float b = (color & 0xFF) / 255.0f;
+
         builder.addVertex(matrix, x, y, z)
-                .setColor(1.0f, 1.0f, 1.0f, alpha)
+                .setColor(r, g, b, alpha)
                 .setUv(u, v)
                 .setOverlay(0)
                 .setLight(light)

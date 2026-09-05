@@ -4,6 +4,12 @@ import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import net.eeebsiekat.morenixies.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -20,6 +26,8 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.phys.BlockHitResult;
+
 import javax.annotation.Nullable;
 
 public class NixieBargraphBlock extends DirectionalBlock implements EntityBlock, SimpleWaterloggedBlock, IWrenchable {
@@ -117,5 +125,62 @@ public class NixieBargraphBlock extends DirectionalBlock implements EntityBlock,
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return ModBlockEntities.NIXIE_BARGRAPH.get().create(pos, state);
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        if (level.getBlockEntity(pos) instanceof NixieBargraphEntity be) {
+
+            // 1. Dye Interaction
+            if (stack.getItem() instanceof DyeItem dye) {
+                if (!level.isClientSide) {
+                    be.getMaster().setColor(dye.getDyeColor().getTextureDiffuseColor());
+                    if (!player.getAbilities().instabuild) stack.shrink(1);
+                }
+                return ItemInteractionResult.SUCCESS;
+            }
+
+            // 2. Shift + Right Click: Cycle Redline Threshold
+            if (player.isShiftKeyDown()) {
+                if (!level.isClientSide) {
+                    NixieBargraphEntity master = be.getMaster();
+                    master.cycleRedlineThreshold();
+
+                    // Optional: Send feedback message to player
+                    int percent = (int) (master.getRedlineThreshold() * 100);
+                    player.displayClientMessage(Component.literal("Redline Threshold: " + percent + "%"), true);
+                }
+                return ItemInteractionResult.SUCCESS;
+            }
+
+            // 3. Right Click with Wrench (or Empty Hand): Toggle Display Mode (BAR / DOT)
+            // Check for Create's Wrench or allow empty hand
+            if (stack.isEmpty() || stack.getItem().getDescriptionId().contains("wrench")) {
+                if (!level.isClientSide) {
+                    NixieBargraphEntity master = be.getMaster();
+                    master.toggleMode();
+
+                    player.displayClientMessage(Component.literal("Display Mode: " + master.getMode().name()), true);
+                }
+                return ItemInteractionResult.SUCCESS;
+            }
+        }
+
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
+
+    @Override
+    public boolean hasAnalogOutputSignal(BlockState state) {
+        return true;
+    }
+
+    @Override
+    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
+        if (level.getBlockEntity(pos) instanceof NixieBargraphEntity be) {
+            // Force reading from master so middle/end parts output correctly too
+            NixieBargraphEntity master = be.getMaster();
+            return (int) Math.floor(master.getCurrentLevel() * 15.0f);
+        }
+        return 0;
     }
 }
