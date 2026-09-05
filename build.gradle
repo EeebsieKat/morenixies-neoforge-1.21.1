@@ -46,7 +46,17 @@ repositories {
         }
         filter { includeGroup("dev.ryanhcode.sable-companion") }
     }
-    maven { url 'https://maven.createmod.net' }
+    maven {
+        // Registrate Maven Host
+        url = "https://maven.tterrag.com/"
+    }
+    maven {
+        url = "https://maven.ithundxr.dev/snapshots"
+    }
+    maven {
+        // Create Mod Host
+        url 'https://maven.createmod.net'
+    }
 }
 
 base {
@@ -137,7 +147,7 @@ configurations {
 dependencies {
     // Create base dependency from Modrinth
     implementation "maven.modrinth:LNytGWDc:UjX6dr61"
-
+    implementation "com.tterrag.registrate:Registrate:${registrate_version}"
     // Standalone Ponder from Create Maven
     implementation "net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}"
 

@@ -40,6 +40,7 @@ public class MoreNixies {
 
     public MoreNixies(IEventBus modEventBus) {
         ModItems.ITEMS.register(modEventBus);
+        ModBlocks.REGISTRATE.registerEventListeners(modEventBus);
         ModBlocks.BLOCKS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         ModDisplaySources.DISPLAY_SOURCES.register(modEventBus);

@@ -1,15 +1,18 @@
 package net.eeebsiekat.morenixies.client.event;
 
+import com.simibubi.create.CreateClient;
 import net.eeebsiekat.morenixies.MoreNixies;
 import net.eeebsiekat.morenixies.client.render.NixieBargraphRenderer;
 import net.eeebsiekat.morenixies.client.render.NixieFlightHudRenderer;
 import net.eeebsiekat.morenixies.client.render.NixieSignalLampRenderer;
 import net.eeebsiekat.morenixies.registry.ModBlockEntities;
 import net.eeebsiekat.morenixies.registry.ModBlocks;
+import net.eeebsiekat.morenixies.registry.ModCTBehaviours;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 @EventBusSubscriber(modid = MoreNixies.MOD_ID)
@@ -29,8 +32,20 @@ public class ClientEvents {
                 ModBlockEntities.NIXIE_FLIGHT_HUD.get(),
                 NixieFlightHudRenderer::new);
 
+
         ItemBlockRenderTypes.setRenderLayer(ModBlocks.NIXIE_SIGNAL_LAMP.get(), RenderType.translucent());
         ItemBlockRenderTypes.setRenderLayer(ModBlocks.NIXIE_BARGRAPH.get(), RenderType.translucent());
         ItemBlockRenderTypes.setRenderLayer(ModBlocks.NIXIE_FLIGHT_HUD.get(), RenderType.translucent());
+    }
+
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            /*// Register Casing Connectivity for Create's connected texture lookup
+            CreateClient.CASING_CONNECTIVITY.makeCasing(
+                    ModBlocks.NIXIE_CASING.get(),
+                    ModCTBehaviours.NIXIE_CASING
+            );*/
+        });
     }
 }

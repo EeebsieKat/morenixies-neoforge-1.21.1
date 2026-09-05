@@ -2,12 +2,14 @@ package net.eeebsiekat.morenixies.content;
 
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
+import net.createmod.catnip.math.VoxelShaper;
 import net.eeebsiekat.morenixies.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
@@ -19,10 +21,15 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 public class NixieFlightHudBlock extends HorizontalDirectionalBlock implements EntityBlock, IWrenchable {
 
@@ -33,6 +40,68 @@ public class NixieFlightHudBlock extends HorizontalDirectionalBlock implements E
         this.registerDefaultState(this.stateDefinition.any()
                 .setValue(FACING, Direction.NORTH)
                 .setValue(HUD_PART, HudPart.SINGLE));
+    }
+
+    private static final Map<HudPart, VoxelShaper> SHAPERS = createShapers();
+
+    private static Map<HudPart, VoxelShaper> createShapers() {
+        Map<HudPart, VoxelShaper> map = new EnumMap<>(HudPart.class);
+
+        VoxelShape flatPanel = Block.box(0, 0, 0, 16, 19, 2);
+
+        VoxelShape angledLeft = Shapes.or(
+                Block.box(0, 0, 6, 4, 19, 8),
+                Block.box(4, 0, 4, 8, 19, 6),
+                Block.box(8, 0, 2, 12, 19, 4),
+                Block.box(12, 0, 0, 16, 19, 2)
+        );
+
+        VoxelShape angledHardLeft = Shapes.or(
+                Block.box(0, 0, 17, 3, 19, 20),
+                Block.box(3, 0, 14, 6, 19, 17),
+                Block.box(6, 0, 11, 9, 19, 14),
+                Block.box(9, 0, 8, 12, 19, 11)
+        );
+
+        VoxelShape angledRight = Shapes.or(
+                Block.box(0, 0, 0, 4, 19, 2),
+                Block.box(4, 0, 2, 8, 19, 4),
+                Block.box(8, 0, 4, 12, 19, 6),
+                Block.box(12, 0, 6, 16, 19, 8)
+        );
+
+        VoxelShape angledHardRight = Shapes.or(
+                Block.box(0, 0, 8, 3, 19, 11),
+                Block.box(3, 0, 11, 6, 19, 14),
+                Block.box(6, 0, 14, 9, 19, 17),
+                Block.box(9, 0, 17, 12, 19, 20)
+        );
+
+        VoxelShaper flatShaper = VoxelShaper.forHorizontal(flatPanel, Direction.NORTH);
+        VoxelShaper leftShaper = VoxelShaper.forHorizontal(angledLeft, Direction.NORTH);
+        VoxelShaper leftHardShaper = VoxelShaper.forHorizontal(angledHardLeft, Direction.NORTH);
+        VoxelShaper rightShaper = VoxelShaper.forHorizontal(angledRight, Direction.NORTH);
+        VoxelShaper rightHardShaper = VoxelShaper.forHorizontal(angledHardRight, Direction.NORTH);
+
+        map.put(HudPart.SINGLE, flatShaper);
+        map.put(HudPart.MIDDLE, flatShaper);
+        map.put(HudPart.SMALL_SIDE_LEFT_END, leftShaper);
+        map.put(HudPart.SMALL_SIDE_LEFT, leftShaper);
+        map.put(HudPart.LARGE_SIDE_LEFT, leftHardShaper);
+        map.put(HudPart.SMALL_SIDE_RIGHT_END, rightShaper);
+        map.put(HudPart.SMALL_SIDE_RIGHT, rightShaper);
+        map.put(HudPart.LARGE_SIDE_RIGHT, rightHardShaper);
+
+        return map;
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        HudPart part = state.getValue(HUD_PART);
+        Direction facing = state.getValue(FACING);
+
+        VoxelShaper shaper = SHAPERS.get(part);
+        return shaper != null ? shaper.get(facing) : super.getShape(state, level, pos, context);
     }
 
     @Override
