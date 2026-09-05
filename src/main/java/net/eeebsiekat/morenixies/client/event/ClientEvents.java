@@ -2,6 +2,7 @@ package net.eeebsiekat.morenixies.client.event;
 
 import net.eeebsiekat.morenixies.MoreNixies;
 import net.eeebsiekat.morenixies.client.render.NixieBargraphRenderer;
+import net.eeebsiekat.morenixies.client.render.NixieFlightHudRenderer;
 import net.eeebsiekat.morenixies.client.render.NixieSignalLampRenderer;
 import net.eeebsiekat.morenixies.registry.ModBlockEntities;
 import net.eeebsiekat.morenixies.registry.ModBlocks;
@@ -24,6 +25,12 @@ public class ClientEvents {
                 ModBlockEntities.NIXIE_BARGRAPH.get(),
                 NixieBargraphRenderer::new);
 
+        event.registerBlockEntityRenderer(
+                ModBlockEntities.NIXIE_FLIGHT_HUD.get(),
+                NixieFlightHudRenderer::new);
+
+        ItemBlockRenderTypes.setRenderLayer(ModBlocks.NIXIE_SIGNAL_LAMP.get(), RenderType.translucent());
         ItemBlockRenderTypes.setRenderLayer(ModBlocks.NIXIE_BARGRAPH.get(), RenderType.translucent());
+        ItemBlockRenderTypes.setRenderLayer(ModBlocks.NIXIE_FLIGHT_HUD.get(), RenderType.translucent());
     }
 }

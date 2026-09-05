@@ -41,6 +41,10 @@ repositories {
         filter {
             includeGroup "maven.modrinth"
         }
+        forRepository {
+            maven { url = "https://maven.ryanhcode.dev/releases" }
+        }
+        filter { includeGroup("dev.ryanhcode.sable-companion") }
     }
     maven { url 'https://maven.createmod.net' }
 }
@@ -137,8 +141,19 @@ dependencies {
     // Standalone Ponder from Create Maven
     implementation "net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}"
 
-    compileOnly(name: 'aeronautics-neoforge-1.21.1-1.1.3')
-    compileOnly(name: 'simulated-neoforge-1.21.1-1.1.3')
+    implementation("dev.engine-room.flywheel:flywheel-neoforge-1.21.1:1.0.6") {
+        version {
+            strictly "1.0.6"
+        }
+    }
+    jarJar(api("dev.ryanhcode.sable-companion:sable-companion-common-1.21.1:[${project.sable_companion_version},)")) {
+        version {
+            prefer(project.sable_companion_version)
+        }
+    }
+    compileOnly(name: 'dev.eriksonn.aeronautics.aeronautics-neoforge-1.21.1-1.3.2')
+    compileOnly(name: 'dev.simulated_team.simulated.simulated-neoforge-1.21.1-1.3.2')
+    compileOnly(name: 'sable-neoforge-1.21.1-2.0.5')
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

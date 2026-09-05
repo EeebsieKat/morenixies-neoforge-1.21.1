@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "morenixies:block/nixie_flight_hud"
+    },
+    "facing=south": {
+      "model": "morenixies:block/nixie_flight_hud",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "morenixies:block/nixie_flight_hud",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "morenixies:block/nixie_flight_hud",
+      "y": 90
+    }
+  }
+}

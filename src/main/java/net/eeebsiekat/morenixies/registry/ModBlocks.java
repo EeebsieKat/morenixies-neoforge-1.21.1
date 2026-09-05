@@ -2,6 +2,7 @@ package net.eeebsiekat.morenixies.registry;
 
 import net.eeebsiekat.morenixies.MoreNixies;
 import net.eeebsiekat.morenixies.content.NixieBargraphBlock;
+import net.eeebsiekat.morenixies.content.NixieFlightHudBlock;
 import net.eeebsiekat.morenixies.content.NixieSignalLampBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -24,6 +25,16 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> NIXIE_BARGRAPH = BLOCKS.register("nixie_bargraph",
             () -> new NixieBargraphBlock(BlockBehaviour.Properties.of()
+                    .noOcclusion()
+                    .isRedstoneConductor((state, level, pos) -> false)
+                    .lightLevel(state -> 10)
+                    .strength(1.5f, 3.0f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.GLASS)
+            ));
+
+    public static final DeferredBlock<Block> NIXIE_FLIGHT_HUD = BLOCKS.register("nixie_flight_hud",
+            () -> new NixieFlightHudBlock(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .isRedstoneConductor((state, level, pos) -> false)
                     .lightLevel(state -> 10)

@@ -14,4 +14,7 @@ public class ModItems {
 
     public static final DeferredItem<Item> NIXIE_BARGRAPH = ITEMS.register("nixie_bargraph",
             () -> new BlockItem(ModBlocks.NIXIE_BARGRAPH.get(), new Item.Properties()));
+
+    public static final DeferredItem<Item> NIXIE_FLIGHT_HUD = ITEMS.register("nixie_flight_hud",
+            () -> new BlockItem(ModBlocks.NIXIE_FLIGHT_HUD.get(), new Item.Properties()));
 }

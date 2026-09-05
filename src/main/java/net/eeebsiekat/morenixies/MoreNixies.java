@@ -80,11 +80,6 @@ public class MoreNixies {
                     ModBlockEntities.NIXIE_BARGRAPH.get(),
                     ModDisplayTargets.NIXIE_BARGRAPH.get()
             );
-
-            ItemBlockRenderTypes.setRenderLayer(
-                    ModBlocks.NIXIE_SIGNAL_LAMP.get(),
-                    RenderType.translucent()
-            );
         });
     }
 }

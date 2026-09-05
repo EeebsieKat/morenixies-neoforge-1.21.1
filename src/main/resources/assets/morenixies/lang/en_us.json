@@ -1,6 +1,7 @@
 {
   "block.morenixies.nixie_signal_lamp": "Nixie Signal Lamp",
   "block.morenixies.nixie_bargraph": "Nixie Bargraph",
+  "block.morenixies.nixie_flight_hud": "Nixie Flight HUD",
   "morenixies.display_source.fluid_tank_fullness": "Fluid Tank Fullness",
   "morenixies.display_source.stress_network": "Stress Network",
   "morenixies.display_target.nixie_signal_lamp": "Nixie Signal Lamp",
