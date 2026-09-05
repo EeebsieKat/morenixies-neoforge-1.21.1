@@ -11,7 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DirectionalBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -22,7 +22,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import javax.annotation.Nullable;
 
-public class NixieFlightHudBlock extends DirectionalBlock implements EntityBlock, IWrenchable {
+public class NixieFlightHudBlock extends HorizontalDirectionalBlock implements EntityBlock, IWrenchable {
 
     public NixieFlightHudBlock(Properties properties) {
         super(properties);
@@ -32,7 +32,7 @@ public class NixieFlightHudBlock extends DirectionalBlock implements EntityBlock
     public static final com.mojang.serialization.MapCodec<NixieFlightHudBlock> CODEC = simpleCodec(NixieFlightHudBlock::new);
 
     @Override
-    protected com.mojang.serialization.MapCodec<? extends DirectionalBlock> codec() {
+    protected com.mojang.serialization.MapCodec<? extends HorizontalDirectionalBlock> codec() {
         return CODEC;
     }
 
@@ -43,9 +43,7 @@ public class NixieFlightHudBlock extends DirectionalBlock implements EntityBlock
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // Places facing the player, or opposite to the face clicked depending on preference.
-        // For a HUD, you usually want it facing AWAY from the player so they can read it.
-        return this.defaultBlockState().setValue(FACING, context.getNearestLookingDirection().getOpposite());
+        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
     @Nullable
@@ -57,8 +55,6 @@ public class NixieFlightHudBlock extends DirectionalBlock implements EntityBlock
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
-        // We only really need to tick this on the client side for rendering purposes,
-        // unless you plan to emit redstone signals based on altitude/speed.
         if (!level.isClientSide) return null;
 
         return blockEntityType == ModBlockEntities.NIXIE_FLIGHT_HUD.get()
@@ -69,7 +65,6 @@ public class NixieFlightHudBlock extends DirectionalBlock implements EntityBlock
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (level.getBlockEntity(pos) instanceof NixieFlightHudEntity be) {
-            // Right Click with Wrench: Toggle Display Modes (e.g., Speed in m/s vs knots)
             if (stack.isEmpty() || stack.getItem().getDescriptionId().contains("wrench")) {
                 if (!level.isClientSide) {
                     be.toggleDisplayMode();

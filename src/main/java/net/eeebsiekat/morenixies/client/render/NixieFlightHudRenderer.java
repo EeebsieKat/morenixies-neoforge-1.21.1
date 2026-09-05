@@ -2,6 +2,7 @@ package net.eeebsiekat.morenixies.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 import net.eeebsiekat.morenixies.content.NixieFlightHudBlock;
 import net.eeebsiekat.morenixies.content.NixieFlightHudEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -10,186 +11,122 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 
 public class NixieFlightHudRenderer implements BlockEntityRenderer<NixieFlightHudEntity> {
 
-    // Amber Glow Pixel Colors (RGBA)
-    private static final int RED = 255;
-    private static final int GREEN = 140;
-    private static final int BLUE = 0;
-    private static final int ALPHA = 230;
+    private static final float LINE_THICKNESS = 0.004f;
+    private static final ResourceLocation WHITE_TEX = ResourceLocation.withDefaultNamespace("textures/misc/white.png");
 
-    // Full bright lightmap override for glowing phosphor effect
-    private static final int FULL_BRIGHT = 0xF000F0;
-    private static final float LINE_THICKNESS = 0.007f;
-
-    public NixieFlightHudRenderer(BlockEntityRendererProvider.Context context) {
-    }
+    public NixieFlightHudRenderer(BlockEntityRendererProvider.Context context) {}
 
     @Override
-    public void render(NixieFlightHudEntity entity, float partialTick, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay) {
+    public void render(NixieFlightHudEntity entity, float partialTick, PoseStack poseStack,
+                       MultiBufferSource buffer, int packedLight, int packedOverlay) {
         Direction facing = entity.getBlockState().getValue(NixieFlightHudBlock.FACING);
 
         poseStack.pushPose();
 
-        // Base Alignments
-        poseStack.translate(0.5, 0.5, 0.5);
+        // 1. Align matrix to block center
+        poseStack.translate(0.5F, 0.5F, 0.5F);
 
-        float rotationAngle = switch (facing) {
-            case SOUTH -> 180f;
-            case WEST -> 270f;
-            case EAST -> 90f;
-            default -> 0f;
+        // 2. Orient matrix to face inward toward the pilot
+        float yRot = switch (facing) {
+            case SOUTH -> 0f;
+            case WEST -> 90f;
+            case EAST -> 270f;
+            default -> 180f;
         };
-        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(rotationAngle));
+        poseStack.mulPose(Axis.YP.rotationDegrees(yRot));
 
-        // Position on glass canopy
-        poseStack.translate(0.0, 0.16, 0.0);
-        poseStack.scale(2.2f, 2.2f, 2.2f);
+        // 3. Offsets: Centered on X (0.0F), lowered Y (0.15F), front concave surface (-0.05F Z)
+        poseStack.translate(0.0F, 0.15F, -0.05F);
+        poseStack.scale(1.8f, 1.8f, 1.8f);
 
-        VertexConsumer builder = buffer.getBuffer(RenderType.entityTranslucentCull(
-                ResourceLocation.withDefaultNamespace("textures/misc/white.png")));
-        Matrix4f matrix = poseStack.last().pose();
+        VertexConsumer builder = buffer.getBuffer(RenderType.entityTranslucentCull(WHITE_TEX));
+        Matrix4f staticMatrix = poseStack.last().pose();
 
-        // 1. Static Boresight Reticle (-v-)
-        renderAircraftSymbol(builder, matrix, packedOverlay);
+        // --- STATIC HUD ELEMENTS (Screen Fixed) ---
+        renderBoresightReticle(builder, staticMatrix, packedOverlay);
 
-        // Fetch Telemetry Data
-        float pitch = entity.getInterpolatedPitch(partialTick);
-        float roll = entity.getInterpolatedRoll(partialTick);
-        float yaw = entity.getInterpolatedYaw(partialTick);
-        float speed = entity.getInterpolatedSpeed(partialTick);
-        float altitude = entity.getInterpolatedAltitude(partialTick);
-        float vSpeed = entity.getInterpolatedVerticalSpeed(partialTick);
+        if (entity.isShowTapes()) {
+            float speed = entity.getInterpolatedSpeed(partialTick);
+            float alt = entity.getInterpolatedAltitude(partialTick);
+            float yaw = entity.getInterpolatedYaw(partialTick);
 
-        // 2. Pitch Ladder & Dynamic Horizon Screen
-        if (entity.isShowPitchLadder()) {
-            poseStack.pushPose();
-            // Roll rotation about center reticle
-            poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(-roll));
-            Matrix4f pitchMatrix = poseStack.last().pose();
-
-            renderPitchLadder(builder, pitchMatrix, pitch, packedOverlay);
-            poseStack.popPose();
+            renderSpeedTape(builder, staticMatrix, speed, packedOverlay);
+            renderAltitudeTape(builder, staticMatrix, alt, packedOverlay);
+            renderHeadingRibbon(builder, staticMatrix, yaw, packedOverlay);
         }
 
-        // 3. Side Tapes (Speed & Altitude/VSI) & Heading Ribbon
-        if (entity.isShowTapes()) {
-            renderSpeedTape(builder, matrix, speed, packedOverlay);
-            renderAltitudeTape(builder, matrix, altitude, vSpeed, packedOverlay);
-            renderHeadingRibbon(builder, matrix, yaw, packedOverlay);
+        // --- DYNAMIC HUD ELEMENTS ---
+        if (entity.isShowPitchLadder()) {
+            float pitch = entity.getInterpolatedPitch(partialTick);
+            float roll = entity.getInterpolatedRoll(partialTick);
+
+            poseStack.pushPose();
+
+            // Inverted roll angle sign to compensate for flipped Y-axis facing orientation
+            poseStack.mulPose(Axis.ZP.rotationDegrees(-roll));
+
+            // Pitch offset along vertical axis
+            float pitchOffsetY = (pitch / 90.0f) * 0.35f;
+            poseStack.translate(0.0F, -pitchOffsetY, 0.0F);
+
+            Matrix4f dynamicMatrix = poseStack.last().pose();
+            renderPitchLadder(builder, dynamicMatrix, packedOverlay);
+
+            poseStack.popPose();
         }
 
         poseStack.popPose();
     }
 
-    private void renderAircraftSymbol(VertexConsumer builder, Matrix4f matrix, int overlay) {
-        // Center reticle
-        drawThickLine(builder, matrix, -0.08f, 0.0f, 0.0f, -0.03f, 0.0f, 0.0f, LINE_THICKNESS, overlay);
-        drawThickLine(builder, matrix, -0.03f, 0.0f, 0.0f, 0.0f, -0.025f, 0.0f, LINE_THICKNESS, overlay);
-        drawThickLine(builder, matrix, 0.0f, -0.025f, 0.0f, 0.03f, 0.0f, 0.0f, LINE_THICKNESS, overlay);
-        drawThickLine(builder, matrix, 0.03f, 0.0f, 0.0f, 0.08f, 0.0f, 0.0f, LINE_THICKNESS, overlay);
+    private void renderBoresightReticle(VertexConsumer builder, Matrix4f matrix, int overlay) {
+        drawQuad(builder, matrix, -0.015f, -0.015f, 0.015f, 0.015f, overlay);
+        drawQuad(builder, matrix, -0.08f, -0.003f, -0.03f, 0.003f, overlay);
+        drawQuad(builder, matrix, -0.08f, -0.025f, -0.074f, 0.003f, overlay);
+        drawQuad(builder, matrix, 0.03f, -0.003f, 0.08f, 0.003f, overlay);
+        drawQuad(builder, matrix, 0.074f, -0.025f, 0.08f, 0.003f, overlay);
     }
 
-    private void renderPitchLadder(VertexConsumer builder, Matrix4f matrix, float pitch, int overlay) {
-        // 1 deg pitch = 0.005 units shift
-        float pitchShift = (pitch / 90.0f) * 0.35f;
+    private void renderPitchLadder(VertexConsumer builder, Matrix4f matrix, int overlay) {
+        drawQuad(builder, matrix, -0.25f, -0.002f, -0.08f, 0.002f, overlay);
+        drawQuad(builder, matrix, 0.08f, -0.002f, 0.25f, 0.002f, overlay);
 
-        // Horizon Line
-        float horizonY = -pitchShift;
-        if (horizonY >= -0.2f && horizonY <= 0.2f) {
-            drawThickLine(builder, matrix, -0.22f, horizonY, 0.0f, -0.08f, horizonY, 0.0f, LINE_THICKNESS, overlay);
-            drawThickLine(builder, matrix, 0.08f, horizonY, 0.0f, 0.22f, horizonY, 0.0f, LINE_THICKNESS, overlay);
-        }
-
-        // +10 and -10 Pitch Rungs
         for (int step = -30; step <= 30; step += 10) {
             if (step == 0) continue;
 
-            float rungY = ((step - pitch) / 90.0f) * 0.35f;
-            if (rungY < -0.2f || rungY > 0.2f) continue;
+            float y = (step / 90.0f) * 0.35f;
+            float hw = 0.06f;
+            float drop = step > 0 ? -0.015f : 0.015f;
 
-            float halfWidth = 0.08f;
-            float dropHeight = step > 0 ? -0.015f : 0.015f; // Angled tick marks
+            // Left Ladder Rung
+            drawQuad(builder, matrix, -hw - 0.05f, y - LINE_THICKNESS, -hw, y + LINE_THICKNESS, overlay);
+            drawQuad(builder, matrix, -hw - 0.05f, y, -hw - 0.05f + (LINE_THICKNESS * 2), y + drop, overlay);
 
-            // Left Rung
-            drawThickLine(builder, matrix, -halfWidth - 0.04f, rungY, 0.0f, -halfWidth, rungY, 0.0f, LINE_THICKNESS, overlay);
-            drawThickLine(builder, matrix, -halfWidth - 0.04f, rungY, 0.0f, -halfWidth - 0.04f, rungY + dropHeight, 0.0f, LINE_THICKNESS, overlay);
-
-            // Right Rung
-            drawThickLine(builder, matrix, halfWidth, rungY, 0.0f, halfWidth + 0.04f, rungY, 0.0f, LINE_THICKNESS, overlay);
-            drawThickLine(builder, matrix, halfWidth + 0.04f, rungY, 0.0f, halfWidth + 0.04f, rungY + dropHeight, 0.0f, LINE_THICKNESS, overlay);
+            // Right Ladder Rung
+            drawQuad(builder, matrix, hw, y - LINE_THICKNESS, hw + 0.05f, y + LINE_THICKNESS, overlay);
+            drawQuad(builder, matrix, hw + 0.05f - (LINE_THICKNESS * 2), y, hw + 0.05f, y + drop, overlay);
         }
     }
 
     private void renderSpeedTape(VertexConsumer builder, Matrix4f matrix, float speed, int overlay) {
-        float x = -0.22f;
-        // Vertical Rail
-        drawThickLine(builder, matrix, x, -0.18f, 0.0f, x, 0.18f, 0.0f, LINE_THICKNESS, overlay);
-
-        // Sliding Ticks
-        float offset = (speed % 5.0f) * 0.01f;
-        for (float y = -0.15f; y <= 0.15f; y += 0.05f) {
-            float tickY = y - offset;
-            if (tickY >= -0.18f && tickY <= 0.18f) {
-                drawThickLine(builder, matrix, x - 0.02f, tickY, 0.0f, x, tickY, 0.0f, LINE_THICKNESS, overlay);
-            }
-        }
+        drawQuad(builder, matrix, -0.28f, -0.20f, -0.27f, 0.20f, overlay);
     }
 
-    private void renderAltitudeTape(VertexConsumer builder, Matrix4f matrix, float altitude, float vSpeed, int overlay) {
-        float x = 0.22f;
-        // Vertical Rail
-        drawThickLine(builder, matrix, x, -0.18f, 0.0f, x, 0.18f, 0.0f, LINE_THICKNESS, overlay);
-
-        // Sliding Ticks
-        float offset = (altitude % 10.0f) * 0.005f;
-        for (float y = -0.15f; y <= 0.15f; y += 0.05f) {
-            float tickY = y - offset;
-            if (tickY >= -0.18f && tickY <= 0.18f) {
-                drawThickLine(builder, matrix, x, tickY, 0.0f, x + 0.02f, tickY, 0.0f, LINE_THICKNESS, overlay);
-            }
-        }
-
-        // Vertical Speed Indicator (VSI) Trend Arrow
-        float vsiY = Mth.clamp(vSpeed * 0.02f, -0.15f, 0.15f);
-        drawThickLine(builder, matrix, x + 0.03f, 0.0f, 0.0f, x + 0.03f, vsiY, 0.0f, LINE_THICKNESS * 1.2f, overlay);
+    private void renderAltitudeTape(VertexConsumer builder, Matrix4f matrix, float alt, int overlay) {
+        drawQuad(builder, matrix, 0.27f, -0.20f, 0.28f, 0.20f, overlay);
     }
 
     private void renderHeadingRibbon(VertexConsumer builder, Matrix4f matrix, float yaw, int overlay) {
-        float y = 0.19f;
-        // Heading Rail
-        drawThickLine(builder, matrix, -0.18f, y, 0.0f, 0.18f, y, 0.0f, LINE_THICKNESS, overlay);
-
-        // Compass Center Notch
-        drawThickLine(builder, matrix, 0.0f, y, 0.0f, 0.0f, y - 0.02f, 0.0f, LINE_THICKNESS * 1.5f, overlay);
-
-        // Dynamic Moving Heading Ticks
-        float offset = (yaw % 15.0f) * 0.004f;
-        for (float x = -0.15f; x <= 0.15f; x += 0.04f) {
-            float tickX = x - offset;
-            if (tickX >= -0.18f && tickX <= 0.18f) {
-                drawThickLine(builder, matrix, tickX, y, 0.0f, tickX, y + 0.015f, 0.0f, LINE_THICKNESS, overlay);
-            }
-        }
+        drawQuad(builder, matrix, -0.15f, 0.22f, 0.15f, 0.23f, overlay);
     }
 
-    private void drawThickLine(VertexConsumer builder, Matrix4f matrix, float x1, float y1, float z1, float x2, float y2, float z2, float thickness, int overlay) {
-        float dx = x2 - x1;
-        float dy = y2 - y1;
-        float len = (float) Math.sqrt(dx * dx + dy * dy);
-
-        if (len == 0) return;
-
-        float px = (-dy / len) * (thickness / 2.0f);
-        float py = (dx / len) * (thickness / 2.0f);
-
-        // Quad ribbon with FULL_BRIGHT lightmaps for self-illumination
-        builder.addVertex(matrix, x1 - px, y1 - py, z1).setColor(RED, GREEN, BLUE, ALPHA).setUv(0, 0).setOverlay(overlay).setLight(FULL_BRIGHT).setNormal(0, 1, 0);
-        builder.addVertex(matrix, x1 + px, y1 + py, z1).setColor(RED, GREEN, BLUE, ALPHA).setUv(0, 1).setOverlay(overlay).setLight(FULL_BRIGHT).setNormal(0, 1, 0);
-        builder.addVertex(matrix, x2 + px, y2 + py, z2).setColor(RED, GREEN, BLUE, ALPHA).setUv(1, 1).setOverlay(overlay).setLight(FULL_BRIGHT).setNormal(0, 1, 0);
-        builder.addVertex(matrix, x2 - px, y2 - py, z2).setColor(RED, GREEN, BLUE, ALPHA).setUv(1, 0).setOverlay(overlay).setLight(FULL_BRIGHT).setNormal(0, 1, 0);
+    private void drawQuad(VertexConsumer builder, Matrix4f matrix, float minX, float minY, float maxX, float maxY, int overlay) {
+        builder.addVertex(matrix, minX, minY, 0.0f).setColor(255, 160, 0, 220).setUv(0, 0).setOverlay(overlay).setLight(0xF000F0).setNormal(0, 0, 1);
+        builder.addVertex(matrix, maxX, minY, 0.0f).setColor(255, 160, 0, 220).setUv(1, 0).setOverlay(overlay).setLight(0xF000F0).setNormal(0, 0, 1);
+        builder.addVertex(matrix, maxX, maxY, 0.0f).setColor(255, 160, 0, 220).setUv(1, 1).setOverlay(overlay).setLight(0xF000F0).setNormal(0, 0, 1);
+        builder.addVertex(matrix, minX, maxY, 0.0f).setColor(255, 160, 0, 220).setUv(0, 1).setOverlay(overlay).setLight(0xF000F0).setNormal(0, 0, 1);
     }
 }

@@ -54,18 +54,17 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
             be.altitude = (float) be.telemetry.getAltitude(level, pos);
 
             Quaterniond rot = be.telemetry.getRotation(level, pos);
-            // Convert Quaterniond to Euler angles (Pitch, Yaw, Roll)
-            org.joml.Vector3d angles = rot.getEulerAnglesXYZ(new org.joml.Vector3d());
-            be.pitch = (float) Math.toDegrees(angles.x);
-            be.yaw = (float) Math.toDegrees(angles.y);
-            be.roll = (float) Math.toDegrees(angles.z);
-        } else {
-            be.speed = 0;
-            be.verticalVelocity = 0;
-            be.altitude = pos.getY();
-            be.pitch = 0;
-            be.yaw = 0;
-            be.roll = 0;
+
+            // Extract proper intrinsic Tait-Bryan aircraft angles (Yaw -> Pitch -> Roll)
+            Vector3d forward = new Vector3d(0, 0, 1).rotate(rot);
+            Vector3d up = new Vector3d(0, 1, 0).rotate(rot);
+
+            be.pitch = (float) Math.toDegrees(Math.asin(Math.clamp(forward.y, -1.0, 1.0)));
+            be.yaw = (float) Math.toDegrees(Math.atan2(forward.x, forward.z));
+
+            // Calculate Roll relative to the horizon plane
+            Vector3d right = new Vector3d(1, 0, 0).rotate(rot);
+            be.roll = (float) Math.toDegrees(Math.atan2(right.y, up.y));
         }
     }
 
