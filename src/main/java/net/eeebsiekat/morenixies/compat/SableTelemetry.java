@@ -15,6 +15,7 @@ public class SableTelemetry implements IVehicleTelemetry {
         return SableCompanion.INSTANCE.getContaining(level, pos) != null;
     }
 
+    // Inside SableTelemetry.java
     @Override
     public Vector3d getVelocity(Level level, BlockPos pos) {
         SubLevelAccess subLevel = SableCompanion.INSTANCE.getContaining(level, pos);
@@ -30,7 +31,10 @@ public class SableTelemetry implements IVehicleTelemetry {
         if (logical != null && last != null) {
             transformPoint(logical, jomlPos, currentPos);
             transformPoint(last, jomlPos, lastPos);
-            return currentPos.sub(lastPos).mul(20.0F);
+
+            // FIX: 20 ticks per second conversion
+            // Position delta per tick * 20.0 = m/s
+            return currentPos.sub(lastPos).mul(20.0);
         }
 
         return new Vector3d();

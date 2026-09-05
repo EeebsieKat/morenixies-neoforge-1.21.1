@@ -22,7 +22,8 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
     public enum DisplayMode implements StringRepresentable {
         OFF("off"),
         PITCH_ROLL("pitch_roll"),
-        SPEED_ALTITUDE("speed_altitude"),
+        SPEED("speed"),
+        ALTITUDE("altitude"),
         HEADING("heading"),
         TANK_FULLNESS("tank_fullness");
 
@@ -62,7 +63,7 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state, NixieFlightHudEntity be) {
-        // Store previous values for interpolation
+        // 1. Store previous values for interpolation
         be.prevPitch = be.pitch;
         be.prevRoll = be.roll;
         be.prevYaw = be.yaw;
@@ -70,6 +71,14 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
         be.prevAltitude = be.altitude;
         be.prevVerticalVelocity = be.verticalVelocity;
 
+        // 2. Try Aeronautics integration first
+        if (net.neoforged.fml.ModList.get().isLoaded("aeronautics")) {
+            if (net.eeebsiekat.morenixies.compat.aeronautics.AeronauticsBridge.tryFetchContractionTelemetry(be)) {
+                return;
+            }
+        }
+
+        // 3. Fallback to Sable integration
         if (be.telemetry == null && net.neoforged.fml.ModList.get().isLoaded("sable")) {
             be.telemetry = new SableTelemetry();
         }
@@ -82,7 +91,6 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
 
             Quaterniond rot = be.telemetry.getRotation(level, pos);
 
-            // Extract intrinsic aircraft angles (Yaw -> Pitch -> Roll)
             Vector3d forward = new Vector3d(0, 0, 1).rotate(rot);
             Vector3d up = new Vector3d(0, 1, 0).rotate(rot);
 
@@ -139,17 +147,12 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
         return prevVerticalVelocity + (verticalVelocity - prevVerticalVelocity) * pt;
     }
 
-    public void updateFromAeronautics(float p, float r, float y, float alt, float vSpd) {
-        this.prevPitch = this.pitch;
-        this.prevRoll = this.roll;
-        this.prevYaw = this.yaw;
-        this.prevAltitude = this.altitude;
-        this.prevVerticalVelocity = this.verticalVelocity;
-
+    public void updateFromAeronautics(float p, float r, float y, float alt, float spd, float vSpd) {
         this.pitch = p;
         this.roll = r;
         this.yaw = y;
         this.altitude = alt;
+        this.speed = spd;
         this.verticalVelocity = vSpd;
     }
 

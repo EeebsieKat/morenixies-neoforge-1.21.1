@@ -1,30 +1,45 @@
 package net.eeebsiekat.morenixies.compat.aeronautics;
 
 import dev.simulated_team.simulated.util.SimMovementContext;
+import net.eeebsiekat.morenixies.compat.SableTelemetry;
 import net.eeebsiekat.morenixies.content.NixieFlightHudEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaterniond;
+import org.joml.Vector3d;
 
 public class AeronauticsBridge {
+
+    private static final SableTelemetry TELEMETRY = new SableTelemetry();
+
     public static boolean tryFetchContractionTelemetry(NixieFlightHudEntity hudEntity) {
         if (hudEntity.getLevel() == null) return false;
 
-        // 1. Fetch the movement context using the block's center position
-        SimMovementContext context = SimMovementContext.getMovementContext(hudEntity.getLevel(), Vec3.atCenterOf(hudEntity.getBlockPos()));
+        BlockPos pos = hudEntity.getBlockPos();
+
+        // 1. Fetch movement context
+        SimMovementContext context = SimMovementContext.getMovementContext(hudEntity.getLevel(), Vec3.atCenterOf(pos));
         if (context == null || context.subLevel() == null) return false;
 
-        // 2. Extract orientation and global position directly from the context record
+        // 2. Extract orientation and position
         Quaterniond orientation = context.orientation();
         Vec3 globalPos = context.globalPosition();
 
-        // 3. Convert Quaternion to Euler Angles (Pitch, Yaw, Roll)
+        // 3. Convert Quaternion to Euler Angles
         double[] eulerAngles = quaternionToEulerDegrees(orientation);
-        float pitch = (float) eulerAngles[0];
-        float yaw = (float) eulerAngles[1];
-        float roll = (float) eulerAngles[2];
 
-        // 4. Supply telemetry back to the entity (matches the 5 parameters in updateFromAeronautics)
-        hudEntity.updateFromAeronautics(pitch, roll, yaw, (float) globalPos.y(), 0.0f);
+        // 4. Exact rotation mapping
+        float pitch = (float) eulerAngles[2];
+        float roll  = (float) eulerAngles[1];
+        float yaw   = (float) eulerAngles[0];
+
+        // 5. Compute velocity & scalar speed (m/s)
+        Vector3d velocity = TELEMETRY.getVelocity(hudEntity.getLevel(), pos);
+        float speed = (float) velocity.length();
+        float verticalSpeed = (float) velocity.y;
+
+        // 6. Pass complete telemetry to entity
+        hudEntity.updateFromAeronautics(pitch, roll, yaw, (float) globalPos.y(), speed, verticalSpeed);
         return true;
     }
 

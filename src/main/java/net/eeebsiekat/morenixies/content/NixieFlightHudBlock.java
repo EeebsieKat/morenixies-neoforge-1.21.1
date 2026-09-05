@@ -14,6 +14,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
@@ -175,5 +177,15 @@ public class NixieFlightHudBlock extends HorizontalDirectionalBlock implements E
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new NixieFlightHudEntity(ModBlockEntities.NIXIE_FLIGHT_HUD.get(), pos, state);
+    }
+
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
+        return (lvl, pos, st, be) -> {
+            if (be instanceof NixieFlightHudEntity hudEntity) {
+                NixieFlightHudEntity.tick(lvl, pos, st, hudEntity);
+            }
+        };
     }
 }
