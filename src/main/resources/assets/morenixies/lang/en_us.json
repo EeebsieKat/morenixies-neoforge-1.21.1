@@ -2,6 +2,7 @@
   "block.morenixies.nixie_signal_lamp": "Nixie Signal Lamp",
   "block.morenixies.nixie_bargraph": "Nixie Bargraph",
   "block.morenixies.nixie_flight_hud": "Nixie Flight HUD",
+  "block.morenixies.nixie_oscilloscope": "Nixie Oscilloscope",
   "block.morenixies.nixie_casing": "Nixie Casing",
   "morenixies.display_source.fluid_tank_fullness": "Fluid Tank Fullness",
   "morenixies.display_source.stress_network": "Stress Network",

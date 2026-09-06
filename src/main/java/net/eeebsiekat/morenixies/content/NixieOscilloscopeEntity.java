@@ -11,166 +11,189 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.joml.Vector3d;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class NixieOscilloscopeEntity extends BlockEntity {
 
-    public static final int BUFFER_SIZE = 128; // Expanded buffer for multi-block span
-    private final float[] history = new float[BUFFER_SIZE];
-    private int head = 0;
+    public enum DisplayMode {
+        SPEED("Speed (m/s)");
 
-    // Multi-block structure attributes
-    private BlockPos controllerPos;
-    private int width = 1;
-    private int height = 1;
-    private int offsetX = 0; // Local column index inside screen
-    private int offsetY = 0; // Local row index inside screen
+        private final String displayName;
+        DisplayMode(String displayName) { this.displayName = displayName; }
+        public String getDisplayName() { return displayName; }
+    }
+
+    public static final int SAMPLES = 100;
+    private final float[] history = new float[SAMPLES];
+
+    private float timeSpanSeconds = 5.0f;
+    private DisplayMode mode = DisplayMode.SPEED;
+    private long startTick = 0;
+    private float currentProgress = 0f;
+
+    // Multiblock configuration
+    private int screenWidth = 1;
+    private int screenHeight = 1;
+    private int localX = 0;
+    private int localY = 0;
+    private boolean isController = false;
 
     private static final SableTelemetry TELEMETRY = new SableTelemetry();
 
     public NixieOscilloscopeEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.NIXIE_OSCILLOSCOPE.get(), pos, state);
-        this.controllerPos = pos;
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state, NixieOscilloscopeEntity be) {
         if (level.isClientSide) return;
 
-        // Recalculate screen connectivity periodically or when updated
         if (level.getGameTime() % 20 == 0) {
-            be.updateMultiblockStructure();
+            be.recalculateScreenBounds();
         }
 
-        // Only controller tracks and syncs signal metrics
-        if (!be.isController()) return;
+        if (!be.isController) return;
 
-        Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-        float currentValue = be.readInputSignal(level, pos, facing);
-        be.pushValue(currentValue);
+        if (be.startTick == 0) {
+            be.startTick = level.getGameTime();
+        }
+
+        long totalSpanTicks = (long) (be.timeSpanSeconds * 20f);
+        long elapsed = (level.getGameTime() - be.startTick) % totalSpanTicks;
+        be.currentProgress = (float) elapsed / (float) totalSpanTicks;
+
+        int currentIndex = Math.min((int) (be.currentProgress * SAMPLES), SAMPLES - 1);
+
+        float currentValue = 0f;
+        if (be.mode == DisplayMode.SPEED) {
+            if (TELEMETRY.isMounted(level, pos)) {
+                Vector3d velocity = TELEMETRY.getVelocity(level, pos);
+                currentValue = (float) velocity.length();
+            } else {
+                currentValue = level.getBestNeighborSignal(pos);
+            }
+        }
+
+        be.history[currentIndex] = currentValue;
+
+        be.setChanged();
+        if (level.getGameTime() % 2 == 0) {
+            level.sendBlockUpdated(pos, state, state, 3);
+        }
     }
 
-    private float readInputSignal(Level level, BlockPos pos, Direction facing) {
-        float signal = 0f;
+    public void cycleTimeSpan() {
+        if (timeSpanSeconds == 2.0f) timeSpanSeconds = 5.0f;
+        else if (timeSpanSeconds == 5.0f) timeSpanSeconds = 10.0f;
+        else if (timeSpanSeconds == 10.0f) timeSpanSeconds = 30.0f;
+        else timeSpanSeconds = 2.0f;
 
-        // 1. Redstone Signal (Checks back and sides)
-        int redstone = level.getBestNeighborSignal(pos);
-        if (redstone > 0) {
-            signal = Math.max(signal, redstone);
-        }
-
-        // 2. Telemetry / Sable Speed Metric
-        if (TELEMETRY.isMounted(level, pos)) {
-            Vector3d velocity = TELEMETRY.getVelocity(level, pos);
-            signal = Math.max(signal, (float) velocity.length() * 10f); // Scale for trace view
-        }
-
-        // 3. Create Kinetic RPM (Optional dynamic check via reflection or block state if Create is present)
-        // If your setup uses Create's KineticBlockEntity, pull speed here:
-        // if (be instanceof KineticBlockEntity kbe) signal = Math.abs(kbe.getSpeed());
-
-        return signal;
+        this.startTick = level != null ? level.getGameTime() : 0;
+        syncToClients();
     }
 
-    public void updateMultiblockStructure() {
+    public void cycleMode() {
+        DisplayMode[] modes = DisplayMode.values();
+        this.mode = modes[(this.mode.ordinal() + 1) % modes.length];
+        syncToClients();
+    }
+
+    private void syncToClients() {
+        setChanged();
+        if (level != null) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    public NixieOscilloscopeEntity getControllerEntity() {
+        if (isController || level == null) return this;
+        Direction facing = getBlockState().getValue(BlockStateProperties.HORIZONTAL_FACING);
+        Direction right = facing.getClockWise();
+        BlockPos controllerPos = worldPosition.relative(right.getOpposite(), localX).below(localY);
+
+        if (level.getBlockEntity(controllerPos) instanceof NixieOscilloscopeEntity controllerBE) {
+            return controllerBE;
+        }
+        return this;
+    }
+
+    public float getTimeSpanSeconds() { return getControllerEntity().timeSpanSeconds; }
+    public float getCurrentProgress() { return getControllerEntity().currentProgress; }
+    public DisplayMode getMode() { return getControllerEntity().mode; }
+
+    public float[] getHistoryBuffer() {
+        return getControllerEntity().history;
+    }
+
+    public void recalculateScreenBounds() {
         if (level == null || level.isClientSide) return;
 
         Direction facing = getBlockState().getValue(BlockStateProperties.HORIZONTAL_FACING);
         Direction right = facing.getClockWise();
 
-        // Scan contiguous grid bounds facing the same direction
-        Set<BlockPos> connected = new HashSet<>();
-        findConnectedGrid(worldPosition, facing, connected);
+        int minX = 0;
+        while (isSameCasing(worldPosition.relative(right.getOpposite(), Math.abs(minX) + 1), facing)) minX--;
 
-        int minX = 0, maxX = 0, minY = 0, maxY = 0;
+        int maxX = 0;
+        while (isSameCasing(worldPosition.relative(right, maxX + 1), facing)) maxX++;
 
-        for (BlockPos p : connected) {
-            int relX = (p.getX() - worldPosition.getX()) * right.getStepX() + (p.getZ() - worldPosition.getZ()) * right.getStepZ();
-            int relY = p.getY() - worldPosition.getY();
+        int minY = 0;
+        while (isSameCasing(worldPosition.below(Math.abs(minY) + 1), facing)) minY--;
 
-            minX = Math.min(minX, relX);
-            maxX = Math.max(maxX, relX);
-            minY = Math.min(minY, relY);
-            maxY = Math.max(maxY, relY);
-        }
+        int maxY = 0;
+        while (isSameCasing(worldPosition.above(maxY + 1), facing)) maxY++;
 
-        // Top-Left block acts as Primary Controller
-        BlockPos origin = worldPosition.relative(right, minX).above(maxY);
-        this.controllerPos = origin;
-        this.width = (maxX - minX) + 1;
-        this.height = (maxY - minY) + 1;
+        this.screenWidth = (maxX - minX) + 1;
+        this.screenHeight = (maxY - minY) + 1;
+        this.localX = Math.abs(minX);
+        this.localY = Math.abs(minY);
+        this.isController = (this.localX == 0 && this.localY == 0);
 
-        int myX = (worldPosition.getX() - origin.getX()) * right.getStepX() + (worldPosition.getZ() - origin.getZ()) * right.getStepZ();
-        int myY = origin.getY() - worldPosition.getY();
-        this.offsetX = myX;
-        this.offsetY = myY;
-
-        setChanged();
-        level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        syncToClients();
     }
 
-    private void findConnectedGrid(BlockPos current, Direction facing, Set<BlockPos> visited) {
-        if (visited.contains(current)) return;
-
-        BlockState st = level.getBlockState(current);
-        if (!st.is(getBlockState().getBlock()) || st.getValue(BlockStateProperties.HORIZONTAL_FACING) != facing) {
-            return;
-        }
-
-        visited.add(current);
-        Direction right = facing.getClockWise();
-
-        findConnectedGrid(current.relative(right), facing, visited);
-        findConnectedGrid(current.relative(right.getOpposite()), facing, visited);
-        findConnectedGrid(current.above(), facing, visited);
-        findConnectedGrid(current.below(), facing, visited);
+    private boolean isSameCasing(BlockPos pos, Direction facing) {
+        BlockState st = level.getBlockState(pos);
+        return st.is(getBlockState().getBlock()) && st.getValue(BlockStateProperties.HORIZONTAL_FACING) == facing;
     }
 
-    public boolean isController() {
-        return worldPosition.equals(controllerPos);
-    }
-
-    private void pushValue(float value) {
-        history[head] = value;
-        head = (head + 1) % BUFFER_SIZE;
-        setChanged();
-
-        if (level != null && !level.isClientSide) {
-            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-        }
-    }
-
-    public float[] getHistoryBuffer() {
-        float[] ordered = new float[BUFFER_SIZE];
-        for (int i = 0; i < BUFFER_SIZE; i++) {
-            ordered[i] = history[(head + i) % BUFFER_SIZE];
-        }
-        return ordered;
-    }
-
-    public int getScreenWidth() { return width; }
-    public int getScreenHeight() { return height; }
+    public boolean isController() { return isController; }
+    public int getScreenWidth() { return screenWidth; }
+    public int getScreenHeight() { return screenHeight; }
 
     @Override
     protected void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        for (int i = 0; i < BUFFER_SIZE; i++) {
+        for (int i = 0; i < SAMPLES; i++) {
             tag.putFloat("hist_" + i, history[i]);
         }
-        tag.putInt("head", head);
-        tag.putInt("width", width);
-        tag.putInt("height", height);
+        tag.putFloat("timeSpanSeconds", timeSpanSeconds);
+        tag.putInt("modeOrdinal", mode.ordinal());
+        tag.putLong("startTick", startTick);
+        tag.putFloat("currentProgress", currentProgress);
+        tag.putInt("screenWidth", screenWidth);
+        tag.putInt("screenHeight", screenHeight);
+        tag.putInt("localX", localX);
+        tag.putInt("localY", localY);
+        tag.putBoolean("isController", isController);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        for (int i = 0; i < BUFFER_SIZE; i++) {
+        for (int i = 0; i < SAMPLES; i++) {
             history[i] = tag.getFloat("hist_" + i);
         }
-        head = tag.getInt("head");
-        width = Math.max(1, tag.getInt("width"));
-        height = Math.max(1, tag.getInt("height"));
+        timeSpanSeconds = tag.contains("timeSpanSeconds") ? tag.getFloat("timeSpanSeconds") : 5.0f;
+        if (tag.contains("modeOrdinal")) {
+            int ord = tag.getInt("modeOrdinal");
+            DisplayMode[] modes = DisplayMode.values();
+            mode = (ord >= 0 && ord < modes.length) ? modes[ord] : DisplayMode.SPEED;
+        }
+        startTick = tag.getLong("startTick");
+        currentProgress = tag.getFloat("currentProgress");
+        screenWidth = Math.max(1, tag.getInt("screenWidth"));
+        screenHeight = Math.max(1, tag.getInt("screenHeight"));
+        localX = tag.getInt("localX");
+        localY = tag.getInt("localY");
+        isController = tag.getBoolean("isController");
     }
 
     @Override

@@ -25,8 +25,8 @@ public class ModBlocks {
 
     public static final BlockEntry<NixieCasingBlock> NIXIE_CASING = REGISTRATE
             .block("nixie_casing", NixieCasingBlock::new)
-            .initialProperties(() -> Blocks.OAK_PLANKS)
-            .properties(p -> p.mapColor(MapColor.COLOR_ORANGE).sound(SoundType.WOOD).strength(2.0F))
+            .initialProperties(() -> Blocks.IRON_BLOCK)
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY).sound(SoundType.METAL).strength(2.0F))
             .onRegister(CreateRegistrate.connectedTextures(ModCTBehaviours::nixieCasing))
             .item()
             .build()

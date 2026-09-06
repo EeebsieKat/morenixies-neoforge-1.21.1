@@ -2,6 +2,9 @@
   "replace": false,
   "values": [
     "morenixies:nixie_signal_lamp",
-    "morenixies:nixie_bargraph"
+    "morenixies:nixie_bargraph",
+    "morenixies:nixie_casing",
+    "morenixies:nixie_flight_hud",
+    "morenixies:nixie_oscilloscope"
   ]
 }
