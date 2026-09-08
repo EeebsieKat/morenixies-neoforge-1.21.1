@@ -17,6 +17,8 @@ import org.joml.Matrix4f;
 
 public class NixieOscilloscopeRenderer implements BlockEntityRenderer<NixieOscilloscopeEntity> {
 
+    // CAUTION: AI GENERATED CODE!!
+
     private static final int TRACE_R = 255;
     private static final int TRACE_G = 125;
     private static final int TRACE_B = 15;

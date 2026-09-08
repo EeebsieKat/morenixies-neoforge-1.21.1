@@ -27,21 +27,17 @@ public class StressNetworkSource extends SingleLineDisplaySource {
             if (capacity > 0) {
                 float stressUsageRatio = (stress / capacity) * 100.0f;
 
-                // BARGRAPH TARGET LOGIC
                 if (context.getTargetBlockEntity() instanceof NixieBargraphEntity) {
                     int bargraphMode = context.sourceConfig().getInt("BargraphMode");
 
                     if (bargraphMode == 1) {
-                        // Stress Remaining Mode
                         float remainingPercent = Math.max(0.0f, 100.0f - stressUsageRatio);
                         return Component.literal((int) remainingPercent + "%");
                     }
 
-                    // Default: Stress Used Mode
                     return Component.literal((int) stressUsageRatio + "%");
                 }
 
-                // SIGNAL LAMP TARGET LOGIC
                 if (context.getTargetBlockEntity() instanceof NixieSignalLampEntity) {
                     int modeIndex = context.sourceConfig().getInt("Mode");
                     int thresholdStep = context.sourceConfig().contains("Threshold") ? context.sourceConfig().getInt("Threshold") : 0;
@@ -51,7 +47,6 @@ public class StressNetworkSource extends SingleLineDisplaySource {
                     return Component.literal(active ? "!" : "0");
                 }
 
-                // Fallback for other displays
                 return Component.literal((int) stressUsageRatio + "%");
             }
         }
@@ -67,7 +62,6 @@ public class StressNetworkSource extends SingleLineDisplaySource {
     @OnlyIn(Dist.CLIENT)
     public void initConfigurationWidgets(DisplayLinkContext context, ModularGuiLineBuilder builder, boolean isFirstLine) {
         if (context.getTargetBlockEntity() instanceof NixieBargraphEntity) {
-            // UI OPTIONS FOR BARGRAPH
             if (isFirstLine) {
                 builder.addSelectionScrollInput(0, 120,
                         (si, l) -> si.forOptions(List.of(
@@ -78,7 +72,6 @@ public class StressNetworkSource extends SingleLineDisplaySource {
                 );
             }
         } else if (context.getTargetBlockEntity() instanceof NixieSignalLampEntity) {
-            // UI OPTIONS FOR SIGNAL LAMP
             if (isFirstLine) {
                 builder.addSelectionScrollInput(0, 120,
                         (si, l) -> si.forOptions(List.of(

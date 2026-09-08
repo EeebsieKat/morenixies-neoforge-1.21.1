@@ -74,7 +74,7 @@ public class MoreNixies {
                     );
 
 
-            // Target binding - Uses .register() for SimpleRegistry
+            // Target binding
             DisplayTarget.BY_BLOCK_ENTITY.register(
                     ModBlockEntities.NIXIE_SIGNAL_LAMP.get(),
                     ModDisplayTargets.NIXIE_SIGNAL_LAMP.get()

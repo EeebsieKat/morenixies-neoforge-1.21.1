@@ -17,28 +17,22 @@ public class AeronauticsBridge {
 
         BlockPos pos = hudEntity.getBlockPos();
 
-        // 1. Fetch movement context
         SimMovementContext context = SimMovementContext.getMovementContext(hudEntity.getLevel(), Vec3.atCenterOf(pos));
         if (context == null || context.subLevel() == null) return false;
 
-        // 2. Extract orientation and position
         Quaterniond orientation = context.orientation();
         Vec3 globalPos = context.globalPosition();
 
-        // 3. Convert Quaternion to Euler Angles
         double[] eulerAngles = quaternionToEulerDegrees(orientation);
 
-        // 4. Exact rotation mapping
         float pitch = (float) eulerAngles[2];
         float roll  = (float) eulerAngles[1];
         float yaw   = (float) eulerAngles[0];
 
-        // 5. Compute velocity & scalar speed (m/s)
         Vector3d velocity = TELEMETRY.getVelocity(hudEntity.getLevel(), pos);
         float speed = (float) velocity.length();
         float verticalSpeed = (float) velocity.y;
 
-        // 6. Pass complete telemetry to entity
         hudEntity.updateFromAeronautics(pitch, roll, yaw, (float) globalPos.y(), speed, verticalSpeed);
         return true;
     }

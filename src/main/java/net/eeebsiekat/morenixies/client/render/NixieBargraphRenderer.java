@@ -41,12 +41,10 @@ public class NixieBargraphRenderer implements BlockEntityRenderer<NixieBargraphE
 
         BargraphPart part = state.getValue(NixieBargraphBlock.PART);
 
-        // Only render from master base block
         if (part != BargraphPart.START && part != BargraphPart.SINGLE) {
             return;
         }
 
-        // Interpolate bounce animation between client ticks
         float rawLevel = blockEntity.getCurrentLevel();
         float velocity = blockEntity.getVelocity();
         float interpolatedLevel = rawLevel + (velocity * partialTick);
@@ -97,7 +95,6 @@ public class NixieBargraphRenderer implements BlockEntityRenderer<NixieBargraphE
         float minX = -0.125f;
         float maxX = 0.125f;
 
-        // Display Mode Handling: Solid Fill vs Dot Indicator
         float minY = (blockEntity.getMode() == NixieBargraphEntity.DisplayMode.DOT)
                 ? Math.max(0.0f, fullHeight - 0.25f)
                 : 0.0f;
@@ -106,13 +103,13 @@ public class NixieBargraphRenderer implements BlockEntityRenderer<NixieBargraphE
         float vSpan = (maxV - minV) * ((maxY - minY) * 4.0f);
         float currentMaxV = minV + (vSpan % (maxV - minV));
 
-        // Front Quad
+        // Front
         addVertex(builder, matrix, minX, minY, 0.0f, minU, maxV, light, alpha, activeColor);
         addVertex(builder, matrix, maxX, minY, 0.0f, maxU, maxV, light, alpha, activeColor);
         addVertex(builder, matrix, maxX, maxY, 0.0f, maxU, currentMaxV, light, alpha, activeColor);
         addVertex(builder, matrix, minX, maxY, 0.0f, minU, currentMaxV, light, alpha, activeColor);
 
-        // Back Quad
+        // Back
         addVertex(builder, matrix, maxX, minY, 0.0f, maxU, maxV, light, alpha, activeColor);
         addVertex(builder, matrix, minX, minY, 0.0f, minU, maxV, light, alpha, activeColor);
         addVertex(builder, matrix, minX, maxY, 0.0f, minU, currentMaxV, light, alpha, activeColor);

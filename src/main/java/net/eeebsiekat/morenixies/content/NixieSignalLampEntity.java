@@ -19,7 +19,7 @@ public class NixieSignalLampEntity extends BlockEntity {
         if (level == null || level.isClientSide) return;
 
         String trimmed = text.trim();
-        // Active if the text is "1" OR "!"
+        // Active if the text is 1 or !
         boolean shouldBeLit = trimmed.equals("1") || trimmed.equals("!");
 
         BlockState currentState = getBlockState();

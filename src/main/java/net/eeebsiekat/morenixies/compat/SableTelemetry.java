@@ -22,7 +22,6 @@ public class SableTelemetry implements IVehicleTelemetry {
         SubLevelAccess subLevel = SableCompanion.INSTANCE.getContaining(level, pos);
         if (subLevel == null) return new Vector3d();
 
-        // Pass the block's center as a Vec3 (which implements Position)
         Vec3 blockCenterPos = new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         Vec3 vec = SableCompanion.INSTANCE.getVelocity(level, subLevel, blockCenterPos);
 

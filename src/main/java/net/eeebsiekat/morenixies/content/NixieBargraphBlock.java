@@ -131,7 +131,6 @@ public class NixieBargraphBlock extends DirectionalBlock implements EntityBlock,
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (level.getBlockEntity(pos) instanceof NixieBargraphEntity be) {
 
-            // 1. Dye Interaction
             if (stack.getItem() instanceof DyeItem dye) {
                 if (!level.isClientSide) {
                     be.getMaster().setColor(dye.getDyeColor().getTextureDiffuseColor());
@@ -140,7 +139,6 @@ public class NixieBargraphBlock extends DirectionalBlock implements EntityBlock,
                 return ItemInteractionResult.SUCCESS;
             }
 
-            // 2. Shift + Right Click: Cycle Redline Threshold
             if (player.isShiftKeyDown()) {
                 if (!level.isClientSide) {
                     NixieBargraphEntity master = be.getMaster();
@@ -153,8 +151,6 @@ public class NixieBargraphBlock extends DirectionalBlock implements EntityBlock,
                 return ItemInteractionResult.SUCCESS;
             }
 
-            // 3. Right Click with Wrench (or Empty Hand): Toggle Display Mode (BAR / DOT)
-            // Check for Create's Wrench or allow empty hand
             if (stack.isEmpty() || stack.getItem().getDescriptionId().contains("wrench")) {
                 if (!level.isClientSide) {
                     NixieBargraphEntity master = be.getMaster();
@@ -177,7 +173,6 @@ public class NixieBargraphBlock extends DirectionalBlock implements EntityBlock,
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
         if (level.getBlockEntity(pos) instanceof NixieBargraphEntity be) {
-            // Force reading from master so middle/end parts output correctly too
             NixieBargraphEntity master = be.getMaster();
             return (int) Math.floor(master.getCurrentLevel() * 15.0f);
         }

@@ -29,7 +29,7 @@ public class NixieOscilloscopeEntity extends BlockEntity {
     private long startTick = 0;
     private float currentProgress = 0f;
 
-    // Multiblock configuration
+    // Multiblock config
     private int screenWidth = 1;
     private int screenHeight = 1;
     private int localX = 0;

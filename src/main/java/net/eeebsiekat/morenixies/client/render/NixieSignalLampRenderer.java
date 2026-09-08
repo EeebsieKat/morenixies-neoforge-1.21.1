@@ -48,10 +48,8 @@ public class NixieSignalLampRenderer implements BlockEntityRenderer<NixieSignalL
 
         poseStack.pushPose();
 
-        // 1. Move to block center
         poseStack.translate(0.5D, 0.5D, 0.5D);
 
-        // 2. Rotate ONLY around Y-axis to face player (No pitch angle added)
         float cameraYRot = this.context.getBlockEntityRenderDispatcher().camera.getYRot();
         poseStack.mulPose(Axis.YP.rotationDegrees(-cameraYRot));
 
@@ -64,19 +62,16 @@ public class NixieSignalLampRenderer implements BlockEntityRenderer<NixieSignalL
         float minV = sprite.getV0();
         float maxV = sprite.getV1();
 
-        // Preferred positioning bounds
         float minX = -0.14f;
         float maxX = 0.36f;
         float minY = -0.3f;
         float maxY = 0.2f;
 
-        // Front Face (Facing Player)
         addVertex(builder, matrix, minX, minY, 0.0f, minU, maxV, light, flicker);
         addVertex(builder, matrix, maxX, minY, 0.0f, maxU, maxV, light, flicker);
         addVertex(builder, matrix, maxX, maxY, 0.0f, maxU, minV, light, flicker);
         addVertex(builder, matrix, minX, maxY, 0.0f, minU, minV, light, flicker);
 
-        // Back Face (Mirrored order at exact same Z to prevent clipping)
         addVertex(builder, matrix, maxX, minY, 0.0f, maxU, maxV, light, flicker);
         addVertex(builder, matrix, minX, minY, 0.0f, minU, maxV, light, flicker);
         addVertex(builder, matrix, minX, maxY, 0.0f, minU, minV, light, flicker);

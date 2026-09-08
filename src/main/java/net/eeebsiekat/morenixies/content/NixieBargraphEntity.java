@@ -21,18 +21,17 @@ public class NixieBargraphEntity extends BlockEntity {
         DOT
     }
 
-    private float currentLevel = 0.0f;  // Rendered position ratio
-    private float targetLevel = 0.0f;   // Target ratio set by Display Link
-    private float velocity = 0.0f;      // Spring bounce velocity
+    private float currentLevel = 0.0f;
+    private float targetLevel = 0.0f;
+    private float velocity = 0.0f;
 
     private float redlineThreshold = 0.9f;
     private boolean isRedlined = false;
-    private int color = 0xFF8400;       // Default classic Nixie orange glow
+    private int color = 0xFF8400;
     private DisplayMode mode = DisplayMode.BAR;
 
     private int lastRedstoneLevel = 0;
 
-    // Physics parameters
     private static final float STIFFNESS = 0.08f;
     private static final float DAMPING = 0.70f;
 
@@ -52,7 +51,6 @@ public class NixieBargraphEntity extends BlockEntity {
         NixieBargraphEntity master = getMaster();
         if (master != this) return;
 
-        // Spring-Damper calculation
         float displacement = this.targetLevel - this.currentLevel;
         float force = displacement * STIFFNESS;
 
@@ -60,13 +58,11 @@ public class NixieBargraphEntity extends BlockEntity {
         this.velocity = (this.velocity + force) * DAMPING;
         this.currentLevel += this.velocity;
 
-        // Settle when velocity and displacement become negligible
         if (Math.abs(this.velocity) < 0.0005f && Math.abs(displacement) < 0.0005f) {
             this.currentLevel = this.targetLevel;
             this.velocity = 0.0f;
         }
 
-        // Sound trigger for sudden physical motion shifts
         if (Math.abs(this.velocity - prevVelocity) > 0.05f && this.level != null) {
             this.level.playLocalSound(
                     this.worldPosition.getX() + 0.5,
@@ -87,7 +83,6 @@ public class NixieBargraphEntity extends BlockEntity {
         NixieBargraphEntity master = getMaster();
         if (master != this) return;
 
-        // Notify adjacent blocks if redstone output changed
         int currentRedstone = (int) Math.floor(this.currentLevel * 15.0f);
         if (currentRedstone != this.lastRedstoneLevel && this.level != null) {
             this.lastRedstoneLevel = currentRedstone;
@@ -116,7 +111,6 @@ public class NixieBargraphEntity extends BlockEntity {
         if (Math.abs(newTarget - this.targetLevel) > 0.001f) {
             this.targetLevel = newTarget;
 
-            // Pre-dip physics impulse on change
             this.velocity -= (newTarget < this.currentLevel) ? 0.015f : 0.008f;
 
             notifyUpdate();
@@ -140,7 +134,6 @@ public class NixieBargraphEntity extends BlockEntity {
             return;
         }
 
-        // Cycle in steps of 0.10: 0.9 -> 1.0 -> 0.5 -> 0.6...
         float next = this.redlineThreshold + 0.10f;
         if (next > 1.05f) next = 0.50f;
         this.redlineThreshold = Math.round(next * 100.0f) / 100.0f;

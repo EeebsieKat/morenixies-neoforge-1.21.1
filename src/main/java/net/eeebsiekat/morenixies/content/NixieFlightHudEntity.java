@@ -44,13 +44,13 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
         }
     }
 
-    // Telemetry Data
+    // Telemetry stuff
     public float pitch, roll, yaw;
     public float speed;
     public float altitude;
     public float verticalVelocity;
 
-    // Previous tick values for smooth interpolation in the renderer
+    // Previous tick values
     public float prevPitch, prevRoll, prevYaw;
     public float prevSpeed;
     public float prevAltitude;
@@ -64,7 +64,6 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state, NixieFlightHudEntity be) {
-        // 1. Store previous values for renderer interpolation
         be.prevPitch = be.pitch;
         be.prevRoll = be.roll;
         be.prevYaw = be.yaw;
@@ -72,14 +71,12 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
         be.prevAltitude = be.altitude;
         be.prevVerticalVelocity = be.verticalVelocity;
 
-        // 2. Try Aeronautics integration first
         if (net.neoforged.fml.ModList.get().isLoaded("aeronautics")) {
             if (net.eeebsiekat.morenixies.compat.aeronautics.AeronauticsBridge.tryFetchContractionTelemetry(be)) {
                 return;
             }
         }
 
-        // 3. Fallback to Sable integration
         if (be.telemetry == null && net.neoforged.fml.ModList.get().isLoaded("sable")) {
             be.telemetry = new SableTelemetry();
         }
@@ -87,7 +84,7 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
         if (be.telemetry != null && be.telemetry.isMounted(level, pos)) {
             Vector3d vel = be.telemetry.getVelocity(level, pos);
 
-            // Guard against NaN/Infinity vectors breaking renderers
+            // Guard against NaN/Infinity vectors breaking rendering
             if (vel != null && !Double.isNaN(vel.length()) && !Double.isInfinite(vel.length())) {
                 be.speed = (float) vel.length();
                 be.verticalVelocity = (float) vel.y;
@@ -108,7 +105,7 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
             Vector3d right = new Vector3d(1, 0, 0).rotate(rot);
             be.roll = (float) Math.toDegrees(Math.atan2(right.y, up.y));
         } else if (be.telemetry != null && !be.telemetry.isMounted(level, pos)) {
-            // Decay speed back to zero if unmounted
+            // Put speed back to zero
             be.speed = 0.0f;
             be.verticalVelocity = 0.0f;
         }
@@ -134,7 +131,6 @@ public class NixieFlightHudEntity extends SmartBlockEntity {
         }
     }
 
-    // Interpolation getters used by NixieFlightHudRenderer
     public float getInterpolatedPitch(float pt) {
         return Mth.lerp(pt, prevPitch, pitch);
     }

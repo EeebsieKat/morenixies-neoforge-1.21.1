@@ -15,6 +15,8 @@ import org.joml.Matrix4f;
 
 public class NixieFlightHudRenderer implements BlockEntityRenderer<NixieFlightHudEntity> {
 
+    // CAUTION: AI GENERATED CODE!!
+
     private static final float LINE_THICKNESS = 0.004f;
     private static final ResourceLocation WHITE_TEX = ResourceLocation.withDefaultNamespace("textures/misc/white.png");
 

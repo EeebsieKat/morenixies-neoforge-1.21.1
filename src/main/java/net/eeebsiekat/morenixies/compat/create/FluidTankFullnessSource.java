@@ -28,21 +28,17 @@ public class FluidTankFullnessSource extends SingleLineDisplaySource {
                 float currentAmount = tank.getFluidAmount();
                 float totalCapacity = tank.getCapacity();
 
-                // BARGRAPH TARGET LOGIC
                 if (context.getTargetBlockEntity() instanceof NixieBargraphEntity) {
                     int bargraphMode = context.sourceConfig().getInt("BargraphMode");
 
                     if (bargraphMode == 1) {
-                        // Inverted mode: calculate remaining empty space ratio
                         float remaining = totalCapacity - currentAmount;
                         return Component.literal((int) remaining + "/" + (int) totalCapacity);
                     }
 
-                    // Default fill ratio
                     return Component.literal((int) currentAmount + "/" + (int) totalCapacity);
                 }
 
-                // SIGNAL LAMP TARGET LOGIC
                 if (context.getTargetBlockEntity() instanceof NixieSignalLampEntity) {
                     int modeIndex = context.sourceConfig().getInt("Mode");
                     int thresholdStep = context.sourceConfig().getInt("Threshold");
@@ -65,9 +61,7 @@ public class FluidTankFullnessSource extends SingleLineDisplaySource {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void initConfigurationWidgets(DisplayLinkContext context, ModularGuiLineBuilder builder, boolean isFirstLine) {
-        // Check what block the Display Link is pointing to
         if (context.getTargetBlockEntity() instanceof NixieBargraphEntity) {
-            // UI OPTIONS SPECIFIC TO BARGRAPH
             if (isFirstLine) {
                 builder.addSelectionScrollInput(0, 120,
                         (si, l) -> si.forOptions(List.of(
@@ -78,7 +72,6 @@ public class FluidTankFullnessSource extends SingleLineDisplaySource {
                 );
             }
         } else if (context.getTargetBlockEntity() instanceof NixieSignalLampEntity) {
-            // UI OPTIONS SPECIFIC TO SIGNAL LAMP
             if (isFirstLine) {
                 builder.addSelectionScrollInput(0, 120,
                         (si, l) -> si.forOptions(List.of(

@@ -48,11 +48,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            /*// Register Casing Connectivity for Create's connected texture lookup
-            CreateClient.CASING_CONNECTIVITY.makeCasing(
-                    ModBlocks.NIXIE_CASING.get(),
-                    ModCTBehaviours.NIXIE_CASING
-            );*/
+
         });
     }
 }

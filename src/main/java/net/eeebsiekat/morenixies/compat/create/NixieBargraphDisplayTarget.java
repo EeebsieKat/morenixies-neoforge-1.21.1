@@ -21,7 +21,6 @@ public class NixieBargraphDisplayTarget extends DisplayTarget {
                     .reduce("", (a, b) -> a + b)
                     .trim();
 
-            // Parse progress or raw percentages from source text
             float fillRatio = parseFillRatio(fullText);
             bargraph.setTargetLevel(fillRatio);
         }
@@ -30,11 +29,9 @@ public class NixieBargraphDisplayTarget extends DisplayTarget {
     private float parseFillRatio(String input) {
         if (input.isEmpty()) return 0.0f;
 
-        // Clean out extra characters except numbers, dots, and slashes
         String cleaned = input.replaceAll("[^0-9./%]", "");
 
         try {
-            // Handle fractional formats like "1200/4000 mB"
             if (cleaned.contains("/")) {
                 String[] parts = cleaned.split("/");
                 float current = Float.parseFloat(parts[0]);
@@ -42,13 +39,11 @@ public class NixieBargraphDisplayTarget extends DisplayTarget {
                 return max > 0 ? current / max : 0.0f;
             }
 
-            // Handle standard percentage strings like "75%"
             if (cleaned.contains("%")) {
                 cleaned = cleaned.replace("%", "");
                 return Float.parseFloat(cleaned) / 100.0f;
             }
 
-            // Fallback for raw floating-point numbers (0.0 to 1.0 or up to 100)
             float val = Float.parseFloat(cleaned);
             return val > 1.0f ? val / 100.0f : val;
 

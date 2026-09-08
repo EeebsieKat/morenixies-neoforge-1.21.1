@@ -7,7 +7,7 @@ import net.eeebsiekat.morenixies.content.NixieSignalLampEntity;
 import net.minecraft.network.chat.MutableComponent;
 import java.util.List;
 
-public class NixieSignalLampDisplayTarget extends DisplayTarget {
+public class              NixieSignalLampDisplayTarget extends DisplayTarget {
 
     @Override
     public void acceptText(int line, List<MutableComponent> text, DisplayLinkContext context) {
