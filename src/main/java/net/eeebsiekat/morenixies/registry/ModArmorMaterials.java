@@ -20,10 +20,10 @@ import java.util.function.Supplier;
 public class ModArmorMaterials {
     public static final Holder<ArmorMaterial> SUIT_ARMOR_MATERIAL = register("suit",
             Util.make(new EnumMap<>(ArmorItem.Type.class), attribute -> {
-                attribute.put(ArmorItem.Type.BOOTS, 10);
-                attribute.put(ArmorItem.Type.LEGGINGS, 14);
-                attribute.put(ArmorItem.Type.CHESTPLATE, 18);
-                attribute.put(ArmorItem.Type.HELMET, 10);
+                attribute.put(ArmorItem.Type.BOOTS, 6);
+                attribute.put(ArmorItem.Type.LEGGINGS, 12);
+                attribute.put(ArmorItem.Type.CHESTPLATE, 16);
+                attribute.put(ArmorItem.Type.HELMET, 6);
                 attribute.put(ArmorItem.Type.BODY, 22);
             }), 16, 2f, 0.2f, () -> ModItems.PIXE.get());
 

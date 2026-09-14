@@ -37,6 +37,10 @@ public class MoreNixies {
                         output.accept(ModItems.NIXIE_BARGRAPH.get());
                         output.accept(ModItems.NIXIE_FLIGHT_HUD.get());
                         output.accept(ModItems.PIXE.get());
+                        output.accept(ModItems.PIXIE_HELM.get());
+                        output.accept(ModItems.PIXIE_CHASSIS.get());
+                        output.accept(ModItems.PIXIE_SERVOS.get());
+                        output.accept(ModItems.PIXIE_GROUNDERS.get());
                     })
                     .build()
     );

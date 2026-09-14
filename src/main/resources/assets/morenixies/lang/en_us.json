@@ -3,10 +3,19 @@
   "block.morenixies.nixie_bargraph": "Nixie Bargraph",
   "block.morenixies.nixie_flight_hud": "Nixie Flight HUD",
   "block.morenixies.nixie_oscilloscope": "Nixie Oscilloscope",
+
   "block.morenixies.nixie_casing": "Nixie Casing",
+
   "item.morenixies.pixe": "Pixe",
+
+  "item.morenixies.pixie_helm": "PIXIE Helm",
+  "item.morenixies.pixie_chassis": "PIXIE Chassis",
+  "item.morenixies.pixie_servos": "PIXIE Servos",
+  "item.morenixies.pixie_grounders": "PIXIE Grounders",
+
   "morenixies.display_source.fluid_tank_fullness": "Fluid Tank Fullness",
   "morenixies.display_source.stress_network": "Stress Network",
   "morenixies.display_target.nixie_signal_lamp": "Nixie Signal Lamp",
+
   "creativetab.morenixies_tab": "Create: More Nixies"
 }
