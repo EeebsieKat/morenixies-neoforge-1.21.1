@@ -12,6 +12,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -74,4 +75,8 @@ public class ModBlocks {
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.GLASS)
             ));
+
+    public static final DeferredBlock<LiquidBlock> NECTAR_BLOCK = BLOCKS.register("nectar",
+            () -> new LiquidBlock(ModFluids.SOURCE_NECTAR.get(), BlockBehaviour.Properties.ofFullCopy(Blocks.WATER))
+    );
 }

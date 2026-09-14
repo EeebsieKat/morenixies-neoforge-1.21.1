@@ -46,12 +46,14 @@ public class MoreNixies {
     );
 
     public MoreNixies(IEventBus modEventBus) {
+        ModFluids.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         ModBlocks.REGISTRATE.registerEventListeners(modEventBus);
         ModBlocks.BLOCKS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         ModDisplaySources.DISPLAY_SOURCES.register(modEventBus);
         ModDisplayTargets.DISPLAY_TARGETS.register(modEventBus);
+        ModDataComponents.register(modEventBus);
         CREATIVE_MODE_TABS.register(modEventBus);
 
         modEventBus.addListener(this::onCommonSetup);
