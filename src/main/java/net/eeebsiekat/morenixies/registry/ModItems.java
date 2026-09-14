@@ -3,6 +3,7 @@ package net.eeebsiekat.morenixies.registry;
 import net.eeebsiekat.morenixies.MoreNixies;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -17,4 +18,11 @@ public class ModItems {
 
     public static final DeferredItem<Item> NIXIE_FLIGHT_HUD = ITEMS.register("nixie_flight_hud",
             () -> new BlockItem(ModBlocks.NIXIE_FLIGHT_HUD.get(), new Item.Properties()));
+
+    public static final DeferredItem<Item> PIXE = ITEMS.register("pixe",
+            () -> new Item(new Item.Properties()));
+
+    public static void register(IEventBus eventBus) {
+        ITEMS.register(eventBus);
+    }
 }
